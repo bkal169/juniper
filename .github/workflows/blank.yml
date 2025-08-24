@@ -1,0 +1,156 @@
+# Empire OS — Juniper Rose Legacy System
+
+One hub for Real Estate, Wealth, Nonprofit, Media & Legacy.
+---
+Run your business from a single cockpit:
+listings, lead gen, content, funding, recruiting, grants, daily briefs, and SOP checklists — all wired to automations (Calendly → Zoom, CINC, REDX, Qazzoo, Google, Zapier/Make). 
+
+
+What you’ll get
+• Command Center dashboard • CRM & Deals pipeline • Exhaustive Listing Checklist (spawn-on-activate) • Content planner • Finance (Primerica/DAC/MLO) pipelines • Heart of Juniper donors/grants/cohorts • Daily Briefs • Automation Log • AI prompts (scripts, pre-call briefs, daily ops) • Zapier/Make blueprints
+
+Works with
+Notion, Google (Drive/Calendar), Calendly, Zoom, CINC, REDX, Qazzoo, Zapier/Make, OpenAI
+
+Start now
+→ Duplicate this template (top-right • … menu • Duplicate)
+→ Download ZIP: Direct download
+
+Setup guide
+Scroll down to README for import steps, schema, and automations.
+
+(If you want big “button” vibes in Notion, put each CTA in a colored Callout block with emoji icons.)This is a basic workflow to help you get started with Actions
+
+name: CI
+# Empire OS — Juniper Rose Legacy System
+
+**One hub for Real Estate, Wealth, Nonprofit, Media & Legacy.**  
+Operate listings, pipelines, content, funding, recruiting, grants, daily briefs, and SOP checklists from a single cockpit — with baked-in automations and AI prompts.
+
+[➜ Duplicate the Notion template](#) • [➜ Download ZIP](https://drive.google.com/uc?export=download&id=1i2HYaDl4PYHi6UN_g9f357Bx58Iplg68)
+
+---
+
+## ✨ What’s inside
+
+- **Command Center Dashboard** — Today’s Focus, Weekly Checklist, KPI tiles, Daily Briefs, Automation Log
+- **CRM & Deals Pipeline** — relations, stages, rollups, curated “Hot Expireds” & “FSBO 0–14d” views
+- **Exhaustive Listing Checklist** — spawn on “Active Listing” (Pre-Listing → Post-Closing)
+- **Content Planner** — YouTube/Podcast/Blog cadence; scripts & outlines via AI prompt
+- **Finance Pipelines** — Primerica (recruits/licensing/production), DAC (deals), MLO (loans)
+- **Heart of Juniper** — Donors, Grants, Students, Mentors; proposal & thank-you templates
+- **Daily Briefs** — auto-generated 7:30 AM status drop (with calendar, tasks, hot leads)
+- **Automation Log** — every integration run (new/updated/duplicates/errors)
+- **AI Prompts** — Script generator, Pre-Call Brief, Daily Brief (OpenAI-ready)
+- **Zapier/Make Blueprints** — CINC/REDX/Qazzoo → Notion; Calendly → Zoom → Notion; Zoom summaries; Daily Brief
+
+---
+
+## 🧩 Works with
+
+Notion • Google Drive/Calendar • Calendly • Zoom • CINC • REDX • Qazzoo • Zapier or Make • OpenAI
+
+---
+
+## 📦 Download
+
+- **ZIP (direct):** https://drive.google.com/uc?export=download&id=1i2HYaDl4PYHi6UN_g9f357Bx58Iplg68
+- Or **Duplicate the Notion template** (top-right → **Duplicate**)
+
+---
+
+## 🚀 Quick start (10–15 minutes)
+
+1. **Import DBs**  
+   Notion → Import → CSV (from `/databases` in the ZIP). Creates: CRM, Deals, Listing_Checklist_Tasks, Content, Finance_* (Primerica/DAC/MLO), Donors, Grants, Students, Mentors, Automation_Log, Requests_Generator, Daily_Briefs.
+
+2. **Add Relations/Rollups**  
+   Open `/schemas/Notion_Property_Schema.txt` (in the ZIP) and connect Relations exactly as listed.
+
+3. **Templates**  
+   Paste the Markdown templates in `/templates` into each DB (New → New template).
+
+4. **Command Center**  
+   Create a page “**Command Center**” and add linked views as in `/buttons/Buttons_and_Views.md`.
+
+5. **Automations**  
+   Zapier or Make: follow `/automations/Zapier_Blueprints.md` and `/automations/AI_Prompts.md`. Start with **Calendly → Zoom → Notion (Pre-Call Brief)**, then **CINC/REDX/Qazzoo**, then the **7:30 AM Daily Brief**.
+
+---
+
+## 🔌 Core automations (Zapier/Make)
+
+- **CINC → Notion → AI scripts** (calls/SMS/email + Day 1–7 cadence)  
+- **REDX** (email parser or Drive CSV) → Notion → AI scripts  
+- **Qazzoo** (email parser) → Notion → AI scripts  
+- **Calendly → Zoom → Notion → AI Pre-Call Brief**  
+- **Zoom Recording Completed → AI summary → tasks**  
+- **Daily Brief @ 7:30 AM ET → Notion + email**
+
+*Prompts provided in `/automations/AI_Prompts.md`.*
+
+---
+
+## 🛡️ Security & governance
+
+- **No credentials** within shared Notion pages; store API keys inside Zapier/Make or secrets vaults.
+- **De-dupe rules**: email → phone → name+ZIP; **DNC** checkbox excluded from call queues.
+- **Automation Log** for all runs; weekly digest recommended.
+
+---
+
+## 🗂️ Folder structure (ZIP)
+
+
+---
+
+## 🧭 Roadmap
+
+- v1.1: prebuilt Home page JSON, sample dashboards
+- v1.2: Make/Integromat scenarios export
+- v1.3: optional Super/Potion landing page
+
+---
+
+## 📣 License & use
+
+MIT for the structure/templates. You are responsible for your data and compliance (e.g., DNC, privacy).
+
+---
+
+## 🙌 Credits
+
+Designed by **Alan Augustin** with **Juniper** (AI Operating Partner).
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        run: echo Hello, world!
+
+      # Runs a set of commands using the runners shell
+      - name: Run a multi-line script
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
