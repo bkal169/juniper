@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Empire OS — Juniper Rose Legacy System</title>
+  <meta name="description" content="One hub for Real Estate, Wealth, Nonprofit, Media & Legacy. Operate your entire business from a single cockpit.">
+  <style>
+    :root {
+      --primary: #1a5c3a;
+      --primary-light: #2d8f5e;
+      --accent: #c8a961;
+      --bg: #fafaf7;
+      --bg-alt: #f0ede6;
+      --text: #2c2c2c;
+      --text-muted: #6b6b6b;
+      --card-bg: #ffffff;
+      --shadow: 0 2px 16px rgba(0,0,0,0.06);
+      --radius: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    nav .logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    nav .logo span { color: var(--accent); }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2rem;
+    }
+
+    nav ul a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    nav ul a:hover { color: var(--primary); }
+
+    /* Hero */
+    .hero {
+      padding: 10rem 2rem 6rem;
+      text-align: center;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+    }
+
+    .hero .badge {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 1rem;
+      border-radius: 100px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      max-width: 800px;
+      margin: 0 auto 1.5rem;
+      letter-spacing: -1px;
+      color: var(--text);
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--primary);
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero .cta-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 2rem;
+      border-radius: 100px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(26,92,58,0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Sections */
+    section {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.5px;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 550px;
+      margin: 0 auto;
+    }
+
+    /* Features grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(0,0,0,0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    .feature-card .icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Integrations */
+    .integrations {
+      background: var(--bg-alt);
+      border-radius: var(--radius);
+      padding: 3rem;
+      text-align: center;
+    }
+
+    .integrations h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+    }
+
+    .integration-logos {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+
+    .integration-logos .tag {
+      background: var(--card-bg);
+      padding: 0.75rem 1.5rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    /* Automations */
+    .automations-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .automation-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .automation-item .num {
+      background: var(--primary);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .automation-item h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .automation-item p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Setup */
+    .setup-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      counter-reset: step;
+    }
+
+    .setup-step {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .setup-step::before {
+      counter-increment: step;
+      content: counter(step);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.25rem;
+      margin: 0 auto 1rem;
+    }
+
+    .setup-step h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .setup-step p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* CTA */
+    .cta-section {
+      text-align: center;
+      padding: 5rem 2rem;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+    }
+
+    .cta-section h2 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav ul { display: none; }
+      .hero { padding: 8rem 1.5rem 4rem; }
+      section { padding: 3rem 1.5rem; }
+      .features-grid,
+      .automations-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <a href="#" class="logo">Empire <span>OS</span></a>
+      <ul>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#automations">Automations</a></li>
+        <li><a href="#integrations">Integrations</a></li>
+        <li><a href="#setup">Setup</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="badge">Juniper Rose Legacy System</div>
+    <h1>Your entire empire.<br><em>One cockpit.</em></h1>
+    <p>Real Estate, Wealth, Nonprofit, Media & Legacy — listings, pipelines, content, funding, recruiting, grants, and daily briefs, all wired to automations.</p>
+    <div class="cta-group">
+      <a href="https://drive.google.com/uc?export=download&id=1i2HYaDl4PYHi6UN_g9f357Bx58Iplg68" class="btn btn-primary">Download ZIP</a>
+      <a href="#features" class="btn btn-secondary">Explore Features</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="section-header">
+      <h2>Everything you need, nothing you don't</h2>
+      <p>A unified operating system designed to run every facet of your business.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon">&#x1F3AF;</div>
+        <h3>Command Center</h3>
+        <p>Today's Focus, Weekly Checklist, KPI tiles, Daily Briefs, and a full Automation Log — your mission control.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#x1F4C8;</div>
+        <h3>CRM & Deals Pipeline</h3>
+        <p>Relations, stages, rollups, with curated "Hot Expireds" and "FSBO 0-14d" views built in.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#x2705;</div>
+        <h3>Listing Checklist</h3>
+        <p>Exhaustive Pre-Listing to Post-Closing checklist that auto-spawns when a listing goes active.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#x1F3AC;</div>
+        <h3>Content Planner</h3>
+        <p>YouTube, Podcast, and Blog cadence management with AI-generated scripts and outlines.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#x1F4B0;</div>
+        <h3>Finance Pipelines</h3>
+        <p>Primerica recruits/licensing, DAC deals, and MLO loan tracking in dedicated pipelines.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#x1F49A;</div>
+        <h3>Heart of Juniper</h3>
+        <p>Donors, Grants, Students, and Mentors — with proposal templates and thank-you workflows.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#x1F4E8;</div>
+        <h3>Daily Briefs</h3>
+        <p>Auto-generated 7:30 AM status drops with calendar, tasks, and hot leads — to Notion and email.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#x1F916;</div>
+        <h3>AI Prompts</h3>
+        <p>Script generator, Pre-Call Brief, and Daily Brief prompts — ready for OpenAI integration.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#x26A1;</div>
+        <h3>Zapier/Make Blueprints</h3>
+        <p>Pre-built automation blueprints for every integration, ready to import and customize.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Automations -->
+  <section id="automations">
+    <div class="section-header">
+      <h2>Automations that work while you sleep</h2>
+      <p>Every lead, every meeting, every morning — handled automatically.</p>
+    </div>
+    <div class="automations-list">
+      <div class="automation-item">
+        <div class="num">1</div>
+        <div>
+          <h4>CINC Lead Capture</h4>
+          <p>CINC leads flow to Notion with AI-generated call scripts, SMS, and email cadence (Days 1-7).</p>
+        </div>
+      </div>
+      <div class="automation-item">
+        <div class="num">2</div>
+        <div>
+          <h4>REDX Pipeline</h4>
+          <p>Email parser or Drive CSV ingestion routes expired/FSBO leads into Notion with AI scripts.</p>
+        </div>
+      </div>
+      <div class="automation-item">
+        <div class="num">3</div>
+        <div>
+          <h4>Qazzoo Leads</h4>
+          <p>Email parser captures Qazzoo leads and routes them into your CRM with AI-powered outreach.</p>
+        </div>
+      </div>
+      <div class="automation-item">
+        <div class="num">4</div>
+        <div>
+          <h4>Calendly + Zoom</h4>
+          <p>Booking triggers Zoom link creation and generates an AI Pre-Call Brief in Notion.</p>
+        </div>
+      </div>
+      <div class="automation-item">
+        <div class="num">5</div>
+        <div>
+          <h4>Zoom Summaries</h4>
+          <p>Recording completed triggers AI summary generation and automatic task creation.</p>
+        </div>
+      </div>
+      <div class="automation-item">
+        <div class="num">6</div>
+        <div>
+          <h4>Daily Brief @ 7:30 AM</h4>
+          <p>Every morning at 7:30 AM ET — calendar, tasks, hot leads, KPIs delivered to Notion and email.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Integrations -->
+  <section id="integrations">
+    <div class="integrations">
+      <h2>Plays nice with your stack</h2>
+      <div class="integration-logos">
+        <span class="tag">Notion</span>
+        <span class="tag">Google Drive</span>
+        <span class="tag">Google Calendar</span>
+        <span class="tag">Calendly</span>
+        <span class="tag">Zoom</span>
+        <span class="tag">CINC</span>
+        <span class="tag">REDX</span>
+        <span class="tag">Qazzoo</span>
+        <span class="tag">Zapier</span>
+        <span class="tag">Make</span>
+        <span class="tag">OpenAI</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Setup -->
+  <section id="setup">
+    <div class="section-header">
+      <h2>Up and running in 15 minutes</h2>
+      <p>Five simple steps from download to fully operational system.</p>
+    </div>
+    <div class="setup-steps">
+      <div class="setup-step">
+        <h4>Import Databases</h4>
+        <p>Import CSVs into Notion: CRM, Deals, Content, Finance, Donors, Grants, and more.</p>
+      </div>
+      <div class="setup-step">
+        <h4>Add Relations</h4>
+        <p>Connect Relations and Rollups using the provided Property Schema guide.</p>
+      </div>
+      <div class="setup-step">
+        <h4>Set Up Templates</h4>
+        <p>Paste the Markdown templates into each database for consistent workflows.</p>
+      </div>
+      <div class="setup-step">
+        <h4>Build Command Center</h4>
+        <p>Create your dashboard page with linked views following the Buttons & Views guide.</p>
+      </div>
+      <div class="setup-step">
+        <h4>Wire Automations</h4>
+        <p>Import Zapier/Make blueprints. Start with Calendly, then lead sources, then Daily Brief.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <h2>Ready to run your empire?</h2>
+    <p>Download the template and start operating from a single cockpit today.</p>
+    <div class="cta-group">
+      <a href="https://drive.google.com/uc?export=download&id=1i2HYaDl4PYHi6UN_g9f357Bx58Iplg68" class="btn btn-primary">Download ZIP</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Designed by <a href="https://github.com/bkal169">Alan Augustin</a> with <strong>Juniper</strong> (AI Operating Partner).</p>
+    <p style="margin-top:0.5rem;">MIT License &mdash; You are responsible for your data and compliance.</p>
+  </footer>
+
+</body>
+</html>
