@@ -1,0 +1,48 @@
+name: Lumena OS CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate file structure
+        run: |
+          echo "=== Lumena OS Structure Validation ==="
+          for dir in lumena-os/brand lumena-os/content-pipeline lumena-os/editorial lumena-os/distribution lumena-os/analytics lumena-os/prompts lumena-os/automations lumena-os/assets; do
+            if [ -d "$dir" ]; then
+              echo "✓ $dir"
+            else
+              echo "✗ $dir (missing)"
+            fi
+          done
+
+      - name: Check required files
+        run: |
+          echo "=== Required Files Check ==="
+          files=(
+            "lumena-os/brand/voice-config.md"
+            "lumena-os/content-pipeline/schema.md"
+            "lumena-os/editorial/calendar.md"
+            "lumena-os/analytics/kpi-definitions.md"
+          )
+          missing=0
+          for f in "${files[@]}"; do
+            if [ -f "$f" ]; then
+              echo "✓ $f"
+            else
+              echo "✗ $f (missing)"
+              missing=$((missing + 1))
+            fi
+          done
+          if [ $missing -gt 0 ]; then
+            echo "WARNING: $missing required file(s) missing"
+          fi
+          echo "=== Validation Complete ==="
