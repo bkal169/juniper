@@ -1,0 +1,36 @@
+# JRIH Second Brain — Railway Deployment Config
+# Deploy 3 services: juniper (perpetual), cron (scheduler), webhook (ingest trigger)
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+healthcheckPath = "/health"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# ═══════════════════════════════════════════════════════════
+# Service configs (set via Railway dashboard)
+# ═══════════════════════════════════════════════════════════
+#
+# Service: juniper
+#   Start command: cd agents && python juniper.py
+#   Always on: true
+#   Plan: Starter ($5/mo)
+#
+# Service: cron
+#   Start command: cd agents && python cron_v2.py
+#   Always on: true
+#   Plan: Starter ($5/mo)
+#
+# Service: webhook
+#   Start command: cd agents && python webhook.py
+#   Always on: false (sleep between triggers)
+#   Plan: Starter ($5/mo)
+#
+# Environment variables (set for all services):
+#   SUPABASE_URL=https://ubdhpacoqmlxudcvhyuu.supabase.co
+#   SUPABASE_SERVICE_KEY=<service-key>
+#   OPENAI_API_KEY=<key>
+#   ANTHROPIC_API_KEY=<key>
+#   KIMI_API_KEY=<key>  (optional, for brand swarm)

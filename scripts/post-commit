@@ -1,0 +1,19 @@
+#!/bin/bash
+# JRIH Vault — Git post-commit hook
+# Incremental Graphify update after each commit.
+# Install: cp scripts/post-commit ~/jrih-vault/.git/hooks/post-commit && chmod +x ~/jrih-vault/.git/hooks/post-commit
+
+# Only run if graphify is installed
+if ! command -v graphify &> /dev/null; then
+    exit 0
+fi
+
+# Get changed files in last commit
+CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+
+# Only trigger if wiki/, resources/, or projects/ changed
+# (areas/personal/ is NEVER graphified)
+if echo "$CHANGED_FILES" | grep -qE '^(wiki/|resources/|projects/)'; then
+    echo "[post-commit] Graphify incremental update..."
+    graphify update "$(git rev-parse --show-toplevel)" 2>/dev/null &
+fi

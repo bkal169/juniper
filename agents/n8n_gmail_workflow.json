@@ -1,0 +1,84 @@
+{
+  "name": "JRIH Gmail → Second Brain Ingest",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute", "value": 5 }]
+        },
+        "filters": {
+          "readStatus": "unread",
+          "receivedAfter": "={{ $now.minus(1, 'hour').toISO() }}"
+        }
+      },
+      "id": "gmail-trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred", "name": "bkalan169@gmail.com" } }
+    },
+    {
+      "parameters": {
+        "functionCode": "const email = $input.first().json;\n\n// Extract key fields\nconst from = email.from?.value?.[0]?.address || 'unknown';\nconst subject = email.subject || 'No Subject';\nconst body = email.text || email.snippet || '';\nconst date = email.date;\nconst labels = (email.labelIds || []).join(', ');\n\n// Classify namespace\nlet namespace = 'personal';\nconst subjectLower = subject.toLowerCase();\nif (subjectLower.includes('axiom') || subjectLower.includes('lumena')) namespace = 'axiom';\nelse if (subjectLower.includes('realty') || subjectLower.includes('property') || subjectLower.includes('mlo')) namespace = 'jrih';\nelse if (subjectLower.includes('capital') || subjectLower.includes('funding') || subjectLower.includes('dac')) namespace = 'jrih';\nelse if (subjectLower.includes('kintsugi') || subjectLower.includes('development')) namespace = 'jrih';\nelse if (subjectLower.includes('heart') || subjectLower.includes('hoj') || subjectLower.includes('foundation')) namespace = 'heart_of_juniper';\nelse if (subjectLower.includes('invoice') || subjectLower.includes('contract')) namespace = 'jrih';\n\n// Build content for brain\nconst content = `Email from ${from}: ${subject}\\n\\n${body.substring(0, 2000)}`;\n\nreturn [{\n  json: {\n    content,\n    namespace,\n    subject,\n    from,\n    date,\n    labels,\n    entry_type: 'observation',\n    tags: ['email', namespace, from.split('@')[1]?.split('.')[0] || 'unknown']\n  }\n}];"
+      },
+      "id": "classify",
+      "name": "Classify Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ubdhpacoqmlxudcvhyuu.supabase.co/rest/v1/thoughts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "content", "value": "={{ $json.content }}" },
+            { "name": "source", "value": "={{ $json.namespace }}" },
+            { "name": "entry_type", "value": "={{ $json.entry_type }}" },
+            { "name": "agent", "value": "n8n-gmail-ingest" },
+            { "name": "tags", "value": "={{ JSON.stringify($json.tags) }}" },
+            { "name": "confidence", "value": 0.8 },
+            { "name": "metadata", "value": "={{ JSON.stringify({ from: $json.from, subject: $json.subject, date: $json.date, labels: $json.labels, ingested_by: 'n8n' }) }}" }
+          ]
+        }
+      },
+      "id": "supabase-insert",
+      "name": "Insert to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const result = $input.first().json;\nconsole.log(`[n8n-gmail-ingest] Inserted thought: ${result.id}`);\nreturn [$input.first()];"
+      },
+      "id": "log",
+      "name": "Log Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": { "main": [[{ "node": "Classify Email", "type": "main", "index": 0 }]] },
+    "Classify Email": { "main": [[{ "node": "Insert to Supabase", "type": "main", "index": 0 }]] },
+    "Insert to Supabase": { "main": [[{ "node": "Log Result", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [{ "name": "jrih-brain" }, { "name": "gmail-ingest" }]
+}
