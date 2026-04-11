@@ -1,0 +1,95 @@
+{
+  "name": "JRIH — Notion → Brain (Simple)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "hours", "hoursInterval": 1 }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.NOTION_API_KEY }}" },
+            { "name": "Notion-Version", "value": "2022-06-28" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"page_size\": 50}",
+        "options": {}
+      },
+      "id": "search-notion",
+      "name": "Search Notion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const response = $input.first().json;\nconst results = response.results || [];\nconst output = [];\n\nfor (const page of results) {\n  if (page.object !== 'page') continue;\n\n  // Extract page title\n  let title = 'Untitled';\n  try {\n    const titleProp = Object.values(page.properties || {}).find(p => p.type === 'title');\n    if (titleProp && titleProp.title && titleProp.title.length > 0) {\n      title = titleProp.title.map(t => t.plain_text).join('');\n    }\n  } catch (e) {}\n\n  // Classify namespace by title keywords\n  const lower = title.toLowerCase();\n  let namespace = 'jrih';\n  if (lower.includes('axiom')) namespace = 'axiom';\n  else if (lower.includes('lumena')) namespace = 'lumena';\n  else if (lower.includes('aro')) namespace = 'aro';\n  else if (lower.includes('hoj') || lower.includes('heart of juniper')) namespace = 'heart_of_juniper';\n  else if (lower.includes('personal') || lower.includes('rose')) namespace = 'personal';\n  else if (lower.includes('intel') || lower.includes('research')) namespace = 'intel';\n  else if (lower.includes('infra') || lower.includes('ops')) namespace = 'infra';\n\n  // Minimal content: title + page URL for reference\n  const content = `Notion Page: ${title}\\nURL: ${page.url || ''}\\nLast edited: ${page.last_edited_time || ''}`;\n\n  output.push({\n    json: {\n      content,\n      title,\n      namespace,\n      page_id: page.id,\n      page_url: page.url || '',\n      last_edited: page.last_edited_time || '',\n      tags_json: JSON.stringify(['notion', namespace, 'page']),\n      metadata_json: JSON.stringify({\n        page_id: page.id,\n        page_url: page.url || '',\n        last_edited: page.last_edited_time || '',\n        ingested_by: 'n8n-notion'\n      })\n    }\n  });\n}\n\nreturn output;"
+      },
+      "id": "transform",
+      "name": "Transform",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://obtoinsjncbqdqgdeddl.supabase.co/rest/v1/thoughts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "content", "value": "={{ $json.content }}" },
+            { "name": "title", "value": "={{ $json.title }}" },
+            { "name": "source", "value": "={{ $json.namespace }}" },
+            { "name": "entry_type", "value": "reference" },
+            { "name": "agent", "value": "n8n-notion-ingest" },
+            { "name": "tags", "value": "={{ $json.tags_json }}" },
+            { "name": "confidence", "value": "0.85" },
+            { "name": "metadata", "value": "={{ $json.metadata_json }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-insert",
+      "name": "Insert to Brain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Every Hour": { "main": [[{ "node": "Search Notion", "type": "main", "index": 0 }]] },
+    "Search Notion": { "main": [[{ "node": "Transform", "type": "main", "index": 0 }]] },
+    "Transform": { "main": [[{ "node": "Insert to Brain", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [{ "name": "jrih-brain" }, { "name": "notion-ingest" }]
+}
