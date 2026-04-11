@@ -5,7 +5,7 @@
       "args": ["tsx", "mcp/server.ts"],
       "cwd": "/path/to/juniper",
       "env": {
-        "SUPABASE_URL": "https://ubdhpacoqmlxudcvhyuu.supabase.co",
+        "SUPABASE_URL": "https://obtoinsjncbqdqgdeddl.supabase.co",
         "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}"
       }
     },

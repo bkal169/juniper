@@ -1,6 +1,6 @@
 -- JRIH Second Brain — Juniper Audit Tables
 -- Run AFTER schema.sql
--- Target: Supabase project ubdhpacoqmlxudcvhyuu
+-- Target: Supabase project obtoinsjncbqdqgdeddl (JRIH Command Center = Brain)
 
 -- ═══════════════════════════════════════════════════════════
 -- JUNIPER AUDIT LOG

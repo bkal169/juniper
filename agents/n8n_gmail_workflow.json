@@ -31,7 +31,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://ubdhpacoqmlxudcvhyuu.supabase.co/rest/v1/thoughts",
+        "url": "https://obtoinsjncbqdqgdeddl.supabase.co/rest/v1/thoughts",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,

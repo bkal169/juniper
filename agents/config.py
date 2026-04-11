@@ -11,7 +11,7 @@ from langchain_openai import OpenAIEmbeddings
 # SUPABASE
 # ═══════════════════════════════════════════════════════════
 
-SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://ubdhpacoqmlxudcvhyuu.supabase.co')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://obtoinsjncbqdqgdeddl.supabase.co')
 SUPABASE_SERVICE_KEY = os.environ['SUPABASE_SERVICE_KEY']
 
 sb: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)

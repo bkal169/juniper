@@ -28,7 +28,7 @@ restartPolicyMaxRetries = 10
 #   Plan: Starter ($5/mo)
 #
 # Environment variables (set for all services):
-#   SUPABASE_URL=https://ubdhpacoqmlxudcvhyuu.supabase.co
+#   SUPABASE_URL=https://obtoinsjncbqdqgdeddl.supabase.co  (JRIH Command Center = Brain)
 #   SUPABASE_SERVICE_KEY=<service-key>
 #   OPENAI_API_KEY=<key>
 #   ANTHROPIC_API_KEY=<key>

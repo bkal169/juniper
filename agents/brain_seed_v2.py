@@ -110,7 +110,7 @@ SEEDS = [
     },
     # ─── Infrastructure ───────────────────────────────────────
     {
-        "content": "JRIH infrastructure: Supabase (Postgres + pgvector, project: ubdhpacoqmlxudcvhyuu) for persistent memory. Railway for agent hosting. Vercel for web apps (team: team_k9pMkrpQoIolWK5TG0xkDSXD). Notion for LifeOS dashboard. n8n for workflow automation (bkalan169.app.n8n.cloud). GitHub for version control. Obsidian vault for local knowledge. Graphify for knowledge graph indexing.",
+        "content": "JRIH infrastructure: Supabase project obtoinsjncbqdqgdeddl (JRIH Command Center) is the canonical brain — Postgres + pgvector, persistent memory, thoughts table, HITL queue, Juniper audit log. Separate project ubdhpacoqmlxudcvhyuu is the AxiomOS/JRi product backend (deals, tenants, beta_requests, billing) and is NOT the brain. Railway for agent hosting. Vercel for web apps (team: team_k9pMkrpQoIolWK5TG0xkDSXD). Notion for LifeOS dashboard. n8n for workflow automation (bkalan169.app.n8n.cloud). GitHub for version control. Obsidian vault for local knowledge. Graphify for knowledge graph indexing.",
         "source": "infra",
         "entry_type": "reference",
         "tags": ["infrastructure", "supabase", "railway", "vercel", "notion", "n8n"],

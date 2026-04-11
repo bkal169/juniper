@@ -14,7 +14,7 @@ import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://ubdhpacoqmlxudcvhyuu.supabase.co',
+  process.env.SUPABASE_URL || 'https://obtoinsjncbqdqgdeddl.supabase.co',
   process.env.SUPABASE_SERVICE_KEY || ''
 );
 

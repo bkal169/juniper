@@ -1,5 +1,5 @@
 -- JRIH Second Brain — Core Schema
--- Target: Supabase project ubdhpacoqmlxudcvhyuu
+-- Target: Supabase project obtoinsjncbqdqgdeddl (JRIH Command Center = Brain)
 -- Run this FIRST, then schema_juniper.sql
 
 -- ═══════════════════════════════════════════════════════════
