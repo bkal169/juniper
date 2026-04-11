@@ -1,21 +1,13 @@
 # JRIH Second Brain — Python Dependencies
 
 # Core
-supabase==2.13.0
-langchain-openai==0.3.12
-langchain-anthropic==0.3.12
-langgraph==0.3.30
-
-# Scheduling
-apscheduler==3.11.0
-pytz==2024.2
-
-# HTTP (for Ollama local, webhooks)
-requests==2.32.3
-flask==3.1.0
-
-# Embeddings
-openai==1.66.3
-
-# Utilities
-python-dotenv==1.0.1
+supabase>=2.13.0
+langchain-openai>=0.3.12
+langchain-anthropic>=0.3.12
+langgraph>=0.3.30
+apscheduler>=3.11.0
+pytz>=2024.2
+requests>=2.32.3
+flask>=3.1.0
+openai>=1.66.3
+python-dotenv>=1.0.1
