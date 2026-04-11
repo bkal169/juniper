@@ -1,6 +1,7 @@
 {
   "name": "jrih-brain-mcp",
   "version": "1.0.0",
+  "type": "module",
   "description": "JRIH Second Brain MCP Server — 5 tools for Claude Desktop",
   "main": "server.ts",
   "scripts": {
