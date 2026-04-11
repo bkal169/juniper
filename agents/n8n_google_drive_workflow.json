@@ -1,0 +1,104 @@
+{
+  "name": "JRIH — Google Drive → Brain Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute", "value": 15 }]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "mode": "list",
+          "value": "SET_FOLDER_ID_HERE"
+        },
+        "event": "fileCreatedUpdated",
+        "options": {}
+      },
+      "id": "drive-trigger",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SET_GOOGLE_CRED_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": { "__rl": true, "value": "={{ $json.id }}", "mode": "id" },
+        "options": { "googleFileConversion": { "conversion": { "docsToFormat": "text/plain" } } }
+      },
+      "id": "download-file",
+      "name": "Download File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [460, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SET_GOOGLE_CRED_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "data",
+        "options": {}
+      },
+      "id": "extract-text",
+      "name": "Extract Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const file = $('Google Drive Trigger').item.json;\nconst textData = $input.first().json;\nconst rawText = textData.text || textData.data || '';\n\n// File metadata\nconst fileName = file.name || 'Untitled';\nconst fileId = file.id;\nconst mimeType = file.mimeType || '';\nconst modifiedTime = file.modifiedTime;\n\n// Content — cap at 8000 chars for embedding safety\nconst content = `${fileName}\\n\\n${rawText}`.substring(0, 8000);\n\n// Classify namespace by filename keywords\nconst lower = fileName.toLowerCase();\nlet namespace = 'jrih';\nif (lower.includes('axiom')) namespace = 'axiom';\nelse if (lower.includes('lumena')) namespace = 'lumena';\nelse if (lower.includes('aro')) namespace = 'aro';\nelse if (lower.includes('hoj') || lower.includes('heart of juniper')) namespace = 'heart_of_juniper';\nelse if (lower.includes('kintsugi')) namespace = 'jrih';\nelse if (lower.includes('capital') || lower.includes('realty')) namespace = 'jrih';\nelse if (lower.includes('personal') || lower.includes('rose')) namespace = 'personal';\nelse if (lower.includes('intel') || lower.includes('research')) namespace = 'intel';\nelse if (lower.includes('infra') || lower.includes('ops')) namespace = 'infra';\nelse if (lower.includes('contract') || lower.includes('invoice')) namespace = 'jrih';\n\nreturn [{\n  json: {\n    content,\n    title: fileName,\n    namespace,\n    file_id: fileId,\n    mime_type: mimeType,\n    modified_time: modifiedTime,\n    tags: ['google_drive', namespace, 'document']\n  }\n}];"
+      },
+      "id": "transform",
+      "name": "Transform to Brain Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/thoughts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": {{ JSON.stringify($json.content) }},\n  \"title\": {{ JSON.stringify($json.title) }},\n  \"source\": {{ JSON.stringify($json.namespace) }},\n  \"entry_type\": \"reference\",\n  \"agent\": \"n8n-gdrive-ingest\",\n  \"tags\": {{ JSON.stringify($json.tags) }},\n  \"confidence\": 0.85,\n  \"metadata\": {{ JSON.stringify({ file_id: $json.file_id, mime_type: $json.mime_type, modified_time: $json.modified_time, ingested_by: 'n8n-gdrive' }) }}\n}",
+        "options": {}
+      },
+      "id": "supabase-insert",
+      "name": "Insert to Brain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Google Drive Trigger": { "main": [[{ "node": "Download File", "type": "main", "index": 0 }]] },
+    "Download File": { "main": [[{ "node": "Extract Text", "type": "main", "index": 0 }]] },
+    "Extract Text": { "main": [[{ "node": "Transform to Brain Format", "type": "main", "index": 0 }]] },
+    "Transform to Brain Format": { "main": [[{ "node": "Insert to Brain", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [{ "name": "jrih-brain" }, { "name": "google-drive-ingest" }]
+}

@@ -1,0 +1,116 @@
+{
+  "name": "JRIH — Notion → Brain Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "hours", "hoursInterval": 1 }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.NOTION_API_KEY }}" },
+            { "name": "Notion-Version", "value": "2022-06-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filter\": { \"property\": \"object\", \"value\": \"page\" },\n  \"page_size\": 50,\n  \"sort\": { \"direction\": \"descending\", \"timestamp\": \"last_edited_time\" }\n}",
+        "options": {}
+      },
+      "id": "search-notion",
+      "name": "Search Notion Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "id": "split-results",
+      "name": "Split Pages",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.notion.com/v1/blocks/{{ $json.id }}/children?page_size=100",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.NOTION_API_KEY }}" },
+            { "name": "Notion-Version", "value": "2022-06-28" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-blocks",
+      "name": "Fetch Page Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const page = $('Split Pages').item.json;\nconst blocks = $input.first().json.results || [];\n\n// Extract page title\nlet title = 'Untitled';\ntry {\n  const titleProp = Object.values(page.properties || {}).find(p => p.type === 'title');\n  if (titleProp && titleProp.title && titleProp.title.length > 0) {\n    title = titleProp.title.map(t => t.plain_text).join('');\n  }\n} catch (e) {}\n\n// Extract block text content\nconst textParts = [];\nfor (const block of blocks) {\n  const type = block.type;\n  const data = block[type];\n  if (data && Array.isArray(data.rich_text)) {\n    const text = data.rich_text.map(t => t.plain_text).join('');\n    if (text.trim()) textParts.push(text);\n  }\n}\nconst bodyText = textParts.join('\\n\\n');\nconst content = `${title}\\n\\n${bodyText}`.substring(0, 8000);\n\n// Classify namespace by title keywords\nconst lower = title.toLowerCase();\nlet namespace = 'jrih';\nif (lower.includes('axiom')) namespace = 'axiom';\nelse if (lower.includes('lumena')) namespace = 'lumena';\nelse if (lower.includes('aro')) namespace = 'aro';\nelse if (lower.includes('hoj') || lower.includes('heart of juniper')) namespace = 'heart_of_juniper';\nelse if (lower.includes('kintsugi')) namespace = 'jrih';\nelse if (lower.includes('capital') || lower.includes('realty')) namespace = 'jrih';\nelse if (lower.includes('personal') || lower.includes('rose')) namespace = 'personal';\nelse if (lower.includes('intel') || lower.includes('research')) namespace = 'intel';\nelse if (lower.includes('infra') || lower.includes('ops')) namespace = 'infra';\n\nreturn [{\n  json: {\n    content,\n    title,\n    namespace,\n    page_id: page.id,\n    page_url: page.url,\n    last_edited: page.last_edited_time,\n    tags: ['notion', namespace, 'page']\n  }\n}];"
+      },
+      "id": "transform",
+      "name": "Transform to Brain Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/thoughts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": {{ JSON.stringify($json.content) }},\n  \"title\": {{ JSON.stringify($json.title) }},\n  \"source\": {{ JSON.stringify($json.namespace) }},\n  \"entry_type\": \"reference\",\n  \"agent\": \"n8n-notion-ingest\",\n  \"tags\": {{ JSON.stringify($json.tags) }},\n  \"confidence\": 0.85,\n  \"metadata\": {{ JSON.stringify({ page_id: $json.page_id, page_url: $json.page_url, last_edited: $json.last_edited, ingested_by: 'n8n-notion' }) }}\n}",
+        "options": {}
+      },
+      "id": "supabase-insert",
+      "name": "Insert to Brain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Every Hour": { "main": [[{ "node": "Search Notion Pages", "type": "main", "index": 0 }]] },
+    "Search Notion Pages": { "main": [[{ "node": "Split Pages", "type": "main", "index": 0 }]] },
+    "Split Pages": { "main": [[{ "node": "Fetch Page Content", "type": "main", "index": 0 }]] },
+    "Fetch Page Content": { "main": [[{ "node": "Transform to Brain Format", "type": "main", "index": 0 }]] },
+    "Transform to Brain Format": { "main": [[{ "node": "Insert to Brain", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [{ "name": "jrih-brain" }, { "name": "notion-ingest" }]
+}

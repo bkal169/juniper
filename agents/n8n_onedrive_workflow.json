@@ -1,0 +1,149 @@
+{
+  "name": "JRIH — OneDrive → Brain Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "minutes", "minutesInterval": 15 }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://graph.microsoft.com/v1.0/me/drive/root/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOneDriveOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "list-files",
+      "name": "List OneDrive Files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "SET_ONEDRIVE_CRED_ID",
+          "name": "OneDrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "value",
+        "options": {}
+      },
+      "id": "split-files",
+      "name": "Split Files",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "is-file",
+              "leftValue": "={{ $json.file }}",
+              "rightValue": "",
+              "operator": { "type": "object", "operation": "exists", "singleValue": true }
+            },
+            {
+              "id": "supported-type",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "\\.(txt|md|docx|pdf)$",
+              "operator": { "type": "string", "operation": "regex" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-docs",
+      "name": "Filter Documents",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://graph.microsoft.com/v1.0/me/drive/items/{{ $json.id }}/content",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOneDriveOAuth2Api",
+        "options": { "response": { "response": { "responseFormat": "text" } } }
+      },
+      "id": "download-content",
+      "name": "Download Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 240],
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "SET_ONEDRIVE_CRED_ID",
+          "name": "OneDrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const file = $('Split Files').item.json;\nconst rawText = $input.first().json.data || $input.first().json || '';\nconst textContent = typeof rawText === 'string' ? rawText : JSON.stringify(rawText).substring(0, 8000);\n\nconst fileName = file.name || 'Untitled';\nconst fileId = file.id;\nconst webUrl = file.webUrl;\nconst modifiedTime = file.lastModifiedDateTime;\n\nconst content = `${fileName}\\n\\n${textContent}`.substring(0, 8000);\n\nconst lower = fileName.toLowerCase();\nlet namespace = 'jrih';\nif (lower.includes('axiom')) namespace = 'axiom';\nelse if (lower.includes('lumena')) namespace = 'lumena';\nelse if (lower.includes('aro')) namespace = 'aro';\nelse if (lower.includes('hoj') || lower.includes('heart of juniper')) namespace = 'heart_of_juniper';\nelse if (lower.includes('kintsugi')) namespace = 'jrih';\nelse if (lower.includes('personal') || lower.includes('rose')) namespace = 'personal';\nelse if (lower.includes('intel') || lower.includes('research')) namespace = 'intel';\nelse if (lower.includes('infra') || lower.includes('ops')) namespace = 'infra';\nelse if (lower.includes('contract') || lower.includes('invoice')) namespace = 'jrih';\n\nreturn [{\n  json: {\n    content,\n    title: fileName,\n    namespace,\n    file_id: fileId,\n    web_url: webUrl,\n    modified_time: modifiedTime,\n    tags: ['onedrive', namespace, 'document']\n  }\n}];"
+      },
+      "id": "transform",
+      "name": "Transform to Brain Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/thoughts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": {{ JSON.stringify($json.content) }},\n  \"title\": {{ JSON.stringify($json.title) }},\n  \"source\": {{ JSON.stringify($json.namespace) }},\n  \"entry_type\": \"reference\",\n  \"agent\": \"n8n-onedrive-ingest\",\n  \"tags\": {{ JSON.stringify($json.tags) }},\n  \"confidence\": 0.85,\n  \"metadata\": {{ JSON.stringify({ file_id: $json.file_id, web_url: $json.web_url, modified_time: $json.modified_time, ingested_by: 'n8n-onedrive' }) }}\n}",
+        "options": {}
+      },
+      "id": "supabase-insert",
+      "name": "Insert to Brain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 240]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": { "main": [[{ "node": "List OneDrive Files", "type": "main", "index": 0 }]] },
+    "List OneDrive Files": { "main": [[{ "node": "Split Files", "type": "main", "index": 0 }]] },
+    "Split Files": { "main": [[{ "node": "Filter Documents", "type": "main", "index": 0 }]] },
+    "Filter Documents": { "main": [[{ "node": "Download Content", "type": "main", "index": 0 }], []] },
+    "Download Content": { "main": [[{ "node": "Transform to Brain Format", "type": "main", "index": 0 }]] },
+    "Transform to Brain Format": { "main": [[{ "node": "Insert to Brain", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [{ "name": "jrih-brain" }, { "name": "onedrive-ingest" }]
+}
