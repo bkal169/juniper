@@ -5,10 +5,9 @@
 builder = "nixpacks"
 
 [deploy]
-healthcheckPath = "/health"
-restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 5
-
+startCommand = "python agents/juniper.py"
+restartPolicyType = "always"
+restartPolicyMaxRetries = 10
 # ═══════════════════════════════════════════════════════════
 # Service configs (set via Railway dashboard)
 # ═══════════════════════════════════════════════════════════
