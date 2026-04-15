@@ -6,7 +6,8 @@
       "cwd": "/path/to/juniper",
       "env": {
         "SUPABASE_URL": "https://obtoinsjncbqdqgdeddl.supabase.co",
-        "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}"
+        "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
       }
     },
     "graphify": {
