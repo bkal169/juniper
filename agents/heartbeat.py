@@ -25,13 +25,18 @@ from urllib.error import URLError
 # ─────────────────────────────────────────────
 
 SUPABASE_URL   = os.environ.get("SUPABASE_URL", "").rstrip("/")
-SUPABASE_KEY   = os.environ.get("SUPABASE_SERVICE_KEY", "")
+# Accept either naming convention (Railway uses ROLE_KEY, local .env uses SERVICE_KEY)
+SUPABASE_KEY   = (
+    os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    or os.environ.get("SUPABASE_SERVICE_KEY")
+    or ""
+)
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 ALERT_EMAIL    = os.environ.get("ALERT_EMAIL", "bkalan169@gmail.com")
 SILENCE_HOURS  = int(os.environ.get("HEARTBEAT_SILENCE_HOURS", "4"))
 
 assert SUPABASE_URL, "SUPABASE_URL is required"
-assert SUPABASE_KEY, "SUPABASE_SERVICE_KEY is required"
+assert SUPABASE_KEY, "SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) is required"
 assert "obtoinsjncbqdqgdeddl" in SUPABASE_URL, (
     f"SUPABASE_URL must be Brain DB (obtoinsjncbqdqgdeddl), got: {SUPABASE_URL}"
 )
