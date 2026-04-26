@@ -11,7 +11,7 @@ from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 
-from config import sb, embed, route_model, MODELS
+from config import sb, embed, route_model, get_llm, LoopGuard, MODELS
 
 
 # ═══════════════════════════════════════════════════════════
@@ -51,12 +51,11 @@ class SynthesisState(TypedDict):
 def classify_content(state: IngestState) -> IngestState:
     """Gemma: classify source, type, tags, TTL."""
     content = state['raw_content'][:2000]
-    # Use local Ollama Gemma for classification (free)
+    # Use Google AI API (Gemma 4) for classification via GEMMA_API_KEY
     try:
-        import requests
-        resp = requests.post('http://localhost:11434/api/generate', json={
-            'model': 'gemma3:4b',
-            'prompt': f"""Classify this content for a knowledge base. Return JSON only.
+        import requests, os as _os
+        _gemma_key = _os.environ.get('GEMMA_API_KEY', '')
+        _prompt = f"""Classify this content for a knowledge base. Return JSON only.
 Fields: source (one of: jrih, axiom, lumena, aro, personal, content, infra, intel, heart_of_juniper),
 entry_type (one of: observation, decision, task, reference, insight, question, flagged),
 tags (list of 2-5 keyword tags),
@@ -66,10 +65,15 @@ quality_estimate (1-10).
 Content:
 {content}
 
-JSON:""",
-            'stream': False,
-        })
-        result = resp.json()['response']
+JSON:"""
+        resp = requests.post(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemma-4:generateContent',
+            params={'key': _gemma_key},
+            json={'contents': [{'parts': [{'text': _prompt}]}]},
+            timeout=30,
+        )
+        resp.raise_for_status()  # surface 429 rate-limit errors explicitly
+        result = resp.json()['candidates'][0]['content']['parts'][0]['text']
         # Extract JSON from response
         start = result.find('{')
         end = result.rfind('}') + 1
@@ -83,24 +87,52 @@ JSON:""",
                 'ttl_days': None,
                 'quality_estimate': 5,
             }
-    except Exception:
-        # Fallback if Ollama is down — route to Haiku
-        haiku = ChatAnthropic(model=MODELS['haiku'], max_tokens=500)
-        resp = haiku.invoke(f"""Classify this content. Return JSON with: source, entry_type, tags, ttl_days, quality_estimate.
+    except Exception as _gemma_err:
+        # Fallback chain: Groq Llama-4-Scout (on 429 rate-limit) → Haiku
+        _is_rate_limit = '429' in str(_gemma_err) or (
+            hasattr(_gemma_err, 'response') and
+            getattr(getattr(_gemma_err, 'response', None), 'status_code', 0) == 429
+        )
+        _groq_classification = None
+        if _is_rate_limit:
+            try:
+                from langchain_openai import ChatOpenAI as _COAI
+                _groq = _COAI(
+                    model='meta-llama/llama-4-scout',
+                    base_url='https://openrouter.ai/api/v1',
+                    api_key=_os.environ.get('OPENROUTER_API_KEY', ''),
+                    max_tokens=500,
+                )
+                _gr = _groq.invoke(
+                    f'Classify this content. Return JSON with: source, entry_type, tags, ttl_days, quality_estimate.\nContent: {content}'
+                )
+                _text = _gr.content
+                _s, _e = _text.find('{'), _text.rfind('}') + 1
+                if _s >= 0 and _e > _s:
+                    _groq_classification = json.loads(_text[_s:_e])
+            except Exception:
+                pass  # fall through to Haiku
+
+        if _groq_classification:
+            classification = _groq_classification
+        else:
+            # Final fallback: Haiku
+            haiku = ChatAnthropic(model=MODELS['haiku'], max_tokens=500)
+            resp = haiku.invoke(f"""Classify this content. Return JSON with: source, entry_type, tags, ttl_days, quality_estimate.
 Content: {content}""")
-        try:
-            text = resp.content
-            start = text.find('{')
-            end = text.rfind('}') + 1
-            classification = json.loads(text[start:end])
-        except Exception:
-            classification = {
-                'source': state.get('source', 'jrih'),
-                'entry_type': 'observation',
-                'tags': ['unclassified'],
-                'ttl_days': None,
-                'quality_estimate': 5,
-            }
+            try:
+                text = resp.content
+                start = text.find('{')
+                end = text.rfind('}') + 1
+                classification = json.loads(text[start:end])
+            except Exception:
+                classification = {
+                    'source': state.get('source', 'jrih'),
+                    'entry_type': 'observation',
+                    'tags': ['unclassified'],
+                    'ttl_days': None,
+                    'quality_estimate': 5,
+                }
 
     state['classification'] = classification
     state['quality_score'] = classification.get('quality_estimate', 5)
@@ -242,14 +274,19 @@ def retry_search(state: SearchState) -> SearchState:
 
 
 def synthesize_results(state: SearchState) -> SearchState:
-    """Sonnet synthesizes search results into answer."""
+    """Synthesize search results; model tier scales with result quality confidence."""
     results_text = '\n\n'.join([
         f"[{r['source']}/{r['entry_type']}] (confidence: {r['confidence']}, {r['created_at'][:10]})\n{r['content'][:500]}"
         for r in state['results'][:5]
     ])
 
-    sonnet = ChatAnthropic(model=MODELS['sonnet'], max_tokens=1000)
-    resp = sonnet.invoke(f"""Based on the following knowledge base entries, answer this query concisely and accurately.
+    # Derive confidence from avg result score; de-escalates to haiku at high confidence
+    _avg_conf = (
+        sum(r.get('confidence', 0.5) for r in state['results'][:5]) / min(len(state['results']), 5)
+        if state['results'] else 0.3
+    )
+    _llm = get_llm(route_model('synthesize', confidence=_avg_conf))
+    resp = _llm.invoke(f"""Based on the following knowledge base entries, answer this query concisely and accurately.
 Cite sources by namespace.
 
 Query: {state['query']}
@@ -330,8 +367,9 @@ def synthesize_digest(state: SynthesisState) -> SynthesisState:
 
     combined = '\n\n'.join(summary_parts)
 
-    sonnet = ChatAnthropic(model=MODELS['sonnet'], max_tokens=2000)
-    resp = sonnet.invoke(f"""Create a weekly digest for JRIH (Juniper Rose Investments & Holdings).
+    # Weekly digest: default 0.85 confidence stays at sonnet tier (below 0.90 de-escalation threshold)
+    _llm = get_llm(route_model('synthesize', confidence=0.85))
+    resp = _llm.invoke(f"""Create a weekly digest for JRIH (Juniper Rose Investments & Holdings).
 Organize by division. Highlight: decisions made, tasks completed, new insights,
 open questions, metrics changes. Flag anything that needs Alan's attention.
 
@@ -395,8 +433,9 @@ synthesis_graph = synthesis_builder.compile()
 
 def extract_entities_and_update_wiki(thought_id: str, content: str):
     """Extract entities from a thought and create/update wiki entries."""
-    sonnet = ChatAnthropic(model=MODELS['sonnet'], max_tokens=1000)
-    resp = sonnet.invoke(f"""Extract named entities from this text. Return JSON array of objects.
+    # Entity extraction: 0.80 confidence → stays at sonnet (no de-escalation)
+    _llm = get_llm(route_model('synthesize', confidence=0.80))
+    resp = _llm.invoke(f"""Extract named entities from this text. Return JSON array of objects.
 Each object: {{"name": "entity name", "type": "person|company|project|concept", "summary": "1-2 sentence summary"}}.
 Only extract clearly named entities. Skip generic terms.
 
@@ -412,7 +451,30 @@ JSON:""")
     except Exception:
         return []
 
+    def _wiki_brain_capture(content, namespace='system', tags=None):
+        try:
+            sb.table('thoughts').insert({
+                'content': content, 'source': namespace,
+                'entry_type': 'observation', 'agent': 'loop_guard',
+                'tags': tags or [], 'confidence': 1.0,
+            }).execute()
+        except Exception:
+            pass
+
+    guard = LoopGuard('wiki_entity_loop', max_iterations=30, stall_threshold=8)
+
     for entity in entities:
+        signal = guard.tick(produced_output=False)
+        if signal == 'heal':
+            params = guard.get_heal_strategy()
+            if params['scope'] == 'single_item':
+                # Minimal mode: skip this entity to unblock the loop
+                guard.tick(produced_output=True)
+                continue
+        elif signal == 'abort':
+            guard.emit_to_brain(_wiki_brain_capture, extra=f'thought_id={thought_id}')
+            break
+
         # Check if wiki entry exists
         existing = sb.table('thoughts') \
             .select('id, content') \
@@ -443,5 +505,7 @@ JSON:""")
                 'embedding': embed(wiki_content),
                 'confidence': 0.85,
             }).execute()
+
+        guard.tick(produced_output=True)  # entity successfully processed
 
     return entities

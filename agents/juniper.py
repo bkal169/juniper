@@ -20,7 +20,8 @@ from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
 
 from config import (
-    sb, embed, route_model, route_junior, MODELS, DIVISIONS, DIVISION_NAMES,
+    sb, embed, route_model, route_junior, get_llm, LoopGuard,
+    reset_cycle_counters, MODELS, DIVISIONS, DIVISION_NAMES,
     THRESHOLD_AUTO_EXECUTE, THRESHOLD_REVIEW,
 )
 
@@ -302,7 +303,7 @@ def execute_decision(state: JuniperState) -> JuniperState:
 
 def log_cycle(state: JuniperState) -> JuniperState:
     """Log everything to juniper_audit."""
-    sb.table('juniper_audit').insert({
+    result = sb.table('juniper_audit').insert({
         'cycle_id': state['cycle_id'],
         'division': state['division'],
         'phase': 'complete',
@@ -316,6 +317,11 @@ def log_cycle(state: JuniperState) -> JuniperState:
         'execution_result': state['execution_result'],
         'model_used': state.get('model_used', ''),
     }).execute()
+    if not result.data:
+        raise RuntimeError(
+            f"juniper_audit insert returned empty data for cycle {state['cycle_id']} — "
+            f"likely RLS rejection or wrong Supabase project (check SUPABASE_URL)"
+        )
     return state
 
 
@@ -398,6 +404,7 @@ Format:
 
 def run_cycle(division: str) -> dict:
     """Run a single Juniper cycle for one division."""
+    reset_cycle_counters()  # reset per-cycle model call budgets
     state = {
         'cycle_id': f"juniper-{division}-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}",
         'division': division,
@@ -424,23 +431,71 @@ def run_cycle(division: str) -> dict:
 
 
 def perpetual_loop():
-    """Run Juniper perpetually. One division per hour."""
+    """Run Juniper perpetually. One division per hour. LoopGuard detects stall + self-heals."""
     print(f"\n{'='*60}")
     print(f"JUNIPER — Perpetual Orchestration Loop")
     print(f"Started: {datetime.utcnow().isoformat()}")
     print(f"{'='*60}\n")
 
+    def _brain_capture(content, namespace='system', tags=None):
+        try:
+            sb.table('thoughts').insert({
+                'content':    content,
+                'source':     namespace,
+                'entry_type': 'observation',
+                'agent':      'loop_guard',
+                'tags':       tags or [],
+                'confidence': 1.0,
+            }).execute()
+        except Exception:
+            pass
+
     division_idx = 0
+    # max_iterations is very large — we never want to truly abort a perpetual loop.
+    # stall_threshold=10 means 10 consecutive cycles with action_type='none' → heal.
+    guard = LoopGuard('juniper_perpetual', max_iterations=100_000, stall_threshold=10)
+
     while True:
         division = DIVISIONS[division_idx % len(DIVISIONS)]
         print(f"\n[{datetime.utcnow().strftime('%H:%M:%S')}] Scanning: {DIVISION_NAMES[division]}")
 
-        run_cycle(division)
+        result   = run_cycle(division)
+        action   = result.get('decision', {}).get('action_type', 'none')
+        executed = result.get('executed', False)
+        # produced_output = cycle did something actionable (not just 'none')
+        produced_output = (action != 'none') and executed
+
+        signal = guard.tick(produced_output=produced_output)
+
+        if signal == 'heal':
+            params = guard.get_heal_strategy()
+            print(f"  [LoopGuard] Stall detected — heal attempt {guard.heal_attempts}, scope={params['scope']}")
+            try:
+                sb.table('thoughts').insert({
+                    'content':    (
+                        f'[Juniper stall] Division {division}: {guard.stall_threshold} cycles with no '
+                        f'executed output. Heal attempt {guard.heal_attempts} — scope={params["scope"]}.'
+                    ),
+                    'source':     'system',
+                    'entry_type': 'observation',
+                    'agent':      'juniper-loop-guard',
+                    'tags':       ['loop_stall', 'juniper', division],
+                    'confidence': 0.6,
+                }).execute()
+            except Exception:
+                pass
+
+        elif signal == 'abort':
+            guard.emit_to_brain(_brain_capture, extra=f'last_division={division}')
+            print(f'  [LoopGuard] All heal attempts exhausted — resetting guard and continuing loop.')
+            # Never truly kill the perpetual loop — just reset the guard
+            guard = LoopGuard('juniper_perpetual', max_iterations=100_000, stall_threshold=10)
 
         division_idx += 1
-        # Sleep 1 hour between divisions
-        print(f"  Next scan in 60 minutes...")
-        time.sleep(3600)
+        # Shorten sleep during heal attempts to probe faster
+        sleep_secs = 300 if signal == 'heal' else 3600
+        print(f"  Next scan in {sleep_secs // 60} minutes...")
+        time.sleep(sleep_secs)
 
 
 if __name__ == '__main__':
