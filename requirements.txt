@@ -1,4 +1,4 @@
-# JRIH Second Brain — Python Dependencies
+# JRIH Second Brain – Python Dependencies
 
 # Core
 supabase>=2.13.0
@@ -9,5 +9,5 @@ apscheduler>=3.11.0
 pytz>=2024.2
 requests>=2.32.3
 flask>=3.1.0
-openai>=1.66.3
+openai>=1.68.0
 python-dotenv>=1.0.1
