@@ -114,7 +114,7 @@ def reason(state: JuniperState) -> JuniperState:
     junior_rules = '\n'.join([r['rule_text'] for r in (rules.data or [])]) or 'No active rules yet.'
 
     model = route_model('reason', complexity='low')
-    sonnet = ChatAnthropic(model=model, max_tokens=1500)
+    sonnet = ChatAnthropic(model=model, max_tokens=1500, timeout=60)
 
     resp = sonnet.invoke(f"""You are Juniper, the headless Chief of Staff for JRIH.
 You are scanning the {division} division. Decide the single most impactful action to take.
@@ -178,7 +178,7 @@ def junior_gate(state: JuniperState) -> JuniperState:
         .execute()
     learned_rules = '\n'.join([f"- {r['rule_text']}" for r in (rules.data or [])]) or 'None yet.'
 
-    junior = ChatAnthropic(model=junior_model, max_tokens=800)
+    junior = ChatAnthropic(model=junior_model, max_tokens=800, timeout=60)
     resp = junior.invoke(f"""You are Junior, the adversarial critic for JRIH. Your job: protect the organism.
 Evaluate this Juniper decision. Be skeptical. Check for:
 1. Does this serve the organism's north star ($100M assets)?
@@ -368,7 +368,7 @@ def generate_brief() -> str:
         .limit(10) \
         .execute()
 
-    sonnet = ChatAnthropic(model=MODELS['sonnet'], max_tokens=1500)
+    sonnet = ChatAnthropic(model=MODELS['sonnet'], max_tokens=1500, timeout=60)
     resp = sonnet.invoke(f"""Generate Alan's morning brief for JRIH. Be concise, direct, actionable.
 Alan's style: compressed, directive, expects full context.
 
@@ -461,3 +461,4 @@ if __name__ == '__main__':
             print("Usage: python juniper.py [cycle <division>|brief]")
     else:
         perpetual_loop()
+
