@@ -1,4 +1,4 @@
-"""
+﻿"""
 JRIH Second Brain — Agent Configuration
 Model routing, Supabase client, embeddings.
 """
@@ -32,9 +32,9 @@ def embed(text: str) -> list:
 # ═══════════════════════════════════════════════════════════
 
 MODELS = {
-    'gemma':  'gemma3:4b',                # Ollama local, free
-    'haiku':  'claude-haiku-4-5',         # Fast, cheap
-    'kimi':   'moonshot-v1-128k',         # Long-doc + swarm
+    'gemma':  'claude-haiku-4-5-20251001'  # was gemma3:4b (Ollama) — not available on Railway,                # Ollama local, free
+    'haiku':  'claude-haiku-4-5-20251001',         # Fast, cheap
+    'kimi':   'kimi-k2',         # Long-doc + swarm
     'sonnet': 'claude-sonnet-4-6',        # Primary workhorse
     'opus':   'claude-opus-4-6',          # The closer
 }
@@ -204,3 +204,4 @@ NOTION_SOCIAL_DB = '25710dec-72aa-8116-9146-000b4ef78002'
 GMAIL = 'bkalan169@gmail.com'
 STAN_STORE = 'stan.store/bkalan169'
 N8N_URL = 'bkalan169.app.n8n.cloud'
+
