@@ -1,4 +1,4 @@
-"""
+﻿"""
 JRIH — Juniper Orchestration Agent
 Headless Chief of Staff. Execute rights. Perpetual loop.
 Loop: Perceive -> Reason -> Junior Gate -> Execute -> Log
@@ -304,6 +304,7 @@ def log_cycle(state: JuniperState) -> JuniperState:
     """Log everything to juniper_audit."""
     sb.table('juniper_audit').insert({
         'cycle_id': state['cycle_id'],
+        'agent_id': 'juniper',
         'division': state['division'],
         'phase': 'complete',
         'action_type': state['decision'].get('action_type', 'none'),
@@ -461,4 +462,5 @@ if __name__ == '__main__':
             print("Usage: python juniper.py [cycle <division>|brief]")
     else:
         perpetual_loop()
+
 
