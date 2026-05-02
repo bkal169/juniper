@@ -21,7 +21,8 @@ from langchain_anthropic import ChatAnthropic
 
 from config import (
     sb, embed, route_model, route_junior, MODELS, DIVISIONS, DIVISION_NAMES,
-    THRESHOLD_AUTO_EXECUTE, THRESHOLD_REVIEW,
+    THRESHOLD_AUTO_EXECUTE, THRESHOLD_AUTO_EXECUTE_LOW, LOW_STAKES_AUTO,
+    THRESHOLD_REVIEW,
 )
 
 
@@ -245,9 +246,13 @@ def execute_decision(state: JuniperState) -> JuniperState:
         return state
 
     # High stakes or low confidence → HITL queue
-    if action_type in ('email', 'deploy', 'contract') or confidence < THRESHOLD_AUTO_EXECUTE:
+    high_stakes = action_type in ('email', 'deploy', 'contract')
+    # Low-stakes action_types (currently only 'memory') get a lower auto-execute floor
+    # so the brain can self-feed observations without piling up HITL items.
+    threshold = THRESHOLD_AUTO_EXECUTE_LOW if action_type in LOW_STAKES_AUTO else THRESHOLD_AUTO_EXECUTE
+    if high_stakes or confidence < threshold:
         sb.table('hitl_queue').insert({
-            'item_type': 'high_stakes' if action_type in ('email', 'deploy', 'contract') else 'low_confidence',
+            'item_type': 'high_stakes' if high_stakes else 'low_confidence',
             'title': decision.get('description', 'Unnamed decision')[:200],
             'context': json.dumps(decision),
             'agent': 'juniper',
@@ -260,14 +265,31 @@ def execute_decision(state: JuniperState) -> JuniperState:
 
     # Auto-execute: memory, research, content at high confidence
     if action_type == 'memory':
+        memory_content = decision.get('description', '')
+        # 1) thoughts table — full text + tags (existing path; brain MCP reads this)
         sb.table('thoughts').insert({
-            'content': decision.get('description', ''),
+            'content': memory_content,
             'source': state['division'],
             'entry_type': 'observation',
             'agent': 'juniper',
             'tags': ['juniper-action', state['division']],
             'confidence': confidence,
         }).execute()
+        # 2) agent_memory — Phase 12.x: surface real captures in the dashboard
+        # widget instead of cycle_summary noise. Only writes when memory is
+        # actually auto-executed (not on every audit row).
+        try:
+            sb.table('agent_memory').insert({
+                'agent_role': 'juniper',
+                'memory_type': 'observation',
+                'content': memory_content[:4000],
+                'summary': (memory_content[:200] + '…') if len(memory_content) > 200 else memory_content,
+                'confidence': confidence,
+                'tags': ['juniper-observation', state['division']],
+                'metadata': {'cycle_id': state['cycle_id'], 'division': state['division']},
+            }).execute()
+        except Exception as e:
+            print(f"  [{state['division']}] agent_memory write failed (non-fatal): {str(e)[:80]}")
         state['executed'] = True
         state['execution_result'] = 'Memory entry created'
     elif action_type == 'research':
@@ -302,12 +324,20 @@ def execute_decision(state: JuniperState) -> JuniperState:
 
 def log_cycle(state: JuniperState) -> JuniperState:
     """Log everything to juniper_audit."""
+    # Phase 13 — guard against None values: dict.get(k, default) only returns
+    # default when the KEY is missing, not when the value is None. Juniper's
+    # reasoning sometimes returns {'action_type': None} which then violated
+    # the NOT NULL constraint on juniper_audit.action. `or 'none'` handles
+    # both missing-key and None cases.
+    action_str = state['decision'].get('action_type') or 'none'
     sb.table('juniper_audit').insert({
         'cycle_id': state['cycle_id'],
         'agent_id': 'juniper',
+        'action': action_str,
+        'namespace': state.get('division', 'jrih'),
         'division': state['division'],
         'phase': 'complete',
-        'action_type': state['decision'].get('action_type', 'none'),
+        'action_type': action_str,
         'decision': state['decision'].get('description', ''),
         'confidence': state['decision'].get('confidence'),
         'junior_verdict': state['junior_verdict'],
