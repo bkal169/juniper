@@ -11,7 +11,12 @@ from langchain_openai import OpenAIEmbeddings
 # SUPABASE
 # ═══════════════════════════════════════════════════════════
 
-SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://ubdhpacoqmlxudcvhyuu.supabase.co')
+# 2026-05-02 fix: stale fallback URL was ubdhpacoqmlxudcvhyuu (different/older
+# project). Active Brain DB is zqrgazuaideuumksijhe per the 2026-04-28 migration
+# (heartbeat.py docstring). If Railway's SUPABASE_URL env var ever blanks, we
+# now fail loud (matches the SUPABASE_SERVICE_KEY pattern below) instead of
+# silently writing to the wrong DB. Verified by Subagent 5 of the audit.
+SUPABASE_URL = os.environ['SUPABASE_URL']
 SUPABASE_SERVICE_KEY = os.environ['SUPABASE_SERVICE_KEY']
 
 sb: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
