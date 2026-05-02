@@ -37,9 +37,12 @@ SILENCE_HOURS  = int(os.environ.get("HEARTBEAT_SILENCE_HOURS", "4"))
 
 assert SUPABASE_URL, "SUPABASE_URL is required"
 assert SUPABASE_KEY, "SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) is required"
-assert "obtoinsjncbqdqgdeddl" in SUPABASE_URL, (
-    f"SUPABASE_URL must be Brain DB (obtoinsjncbqdqgdeddl), got: {SUPABASE_URL}"
-)
+# Phase 13.3: dropped legacy-DB hardcoded assertion. The Brain DB migrated from
+# obtoinsjncbqdqgdeddl (legacy/paused) to zqrgazuaideuumksijhe (active) on
+# 2026-04-28 and this assertion was preventing the heartbeat from being repointed.
+# Soft-warn instead of hard-fail so misconfig is visible but not crash-loop.
+if "supabase.co" not in SUPABASE_URL:
+    print(f"[heartbeat] WARNING: SUPABASE_URL doesn't look like a Supabase host: {SUPABASE_URL}", flush=True)
 
 
 # ─────────────────────────────────────────────
