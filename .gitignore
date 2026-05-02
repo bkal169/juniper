@@ -16,6 +16,10 @@ mcp/node_modules/
 .env
 .env.local
 .env.production
+# Catch-all for any .env variant (incl. .env1, .env.dev, .env*.txt scratch files
+# that have accumulated key values during ops). Audit'd 2026-05-02 — .env1 was
+# previously untracked-but-not-ignored and contained a full secret manifest.
+.env*
 
 # IDE
 .vscode/
