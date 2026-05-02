@@ -1,1 +1,0 @@
-web: sh -c "python agents/${RAILWAY_START_SCRIPT:-juniper.py}"
