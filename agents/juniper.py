@@ -14,7 +14,7 @@ import sys
 import json
 import uuid
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
@@ -90,7 +90,7 @@ def perceive(state: JuniperState) -> JuniperState:
         'recent_thoughts': recent.data or [],
         'pending_hitl': hitl.data or [],
         'recent_decisions': recent_audit.data or [],
-        'scanned_at': datetime.utcnow().isoformat(),
+        'scanned_at': datetime.now(UTC).isoformat(),
     }
     return state
 
@@ -430,7 +430,7 @@ Format:
 def run_cycle(division: str) -> dict:
     """Run a single Juniper cycle for one division."""
     state = {
-        'cycle_id': f"juniper-{division}-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}",
+        'cycle_id': f"juniper-{division}-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}",
         'division': division,
         'perception': {},
         'reasoning': {},
@@ -458,13 +458,13 @@ def perpetual_loop():
     """Run Juniper perpetually. One division per hour."""
     print(f"\n{'='*60}")
     print(f"JUNIPER — Perpetual Orchestration Loop")
-    print(f"Started: {datetime.utcnow().isoformat()}")
+    print(f"Started: {datetime.now(UTC).isoformat()}")
     print(f"{'='*60}\n")
 
     division_idx = 0
     while True:
         division = DIVISIONS[division_idx % len(DIVISIONS)]
-        print(f"\n[{datetime.utcnow().strftime('%H:%M:%S')}] Scanning: {DIVISION_NAMES[division]}")
+        print(f"\n[{datetime.now(UTC).strftime('%H:%M:%S')}] Scanning: {DIVISION_NAMES[division]}")
 
         run_cycle(division)
 
