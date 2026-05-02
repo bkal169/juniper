@@ -109,6 +109,8 @@ def route_junior(action_type: str, confidence: float) -> str:
 # ═══════════════════════════════════════════════════════════
 
 THRESHOLD_AUTO_EXECUTE = 0.92
+THRESHOLD_AUTO_EXECUTE_LOW = 0.85          # Phase 12.x — memory-only auto-execute floor
+LOW_STAKES_AUTO = {'memory'}               # action_types eligible for the lower threshold
 THRESHOLD_REVIEW = 0.75
 # Below 0.75 → Junior rejects, decision shelved
 
