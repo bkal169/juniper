@@ -1,1 +1,1 @@
-web: python agents/juniper.py
+web: python agents/${RAILWAY_START_SCRIPT:-juniper.py}
