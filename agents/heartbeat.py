@@ -96,7 +96,12 @@ def send_alert(last_ts: str | None, silence_hours: float) -> bool:
         details = "Juniper has <strong>never</strong> written to agent_action_log, or the table is empty."
 
     payload = {
-        "from": "Juniper Monitor <noreply@alerts.jrih.dev>",
+        # 2026-05-02 parity fix: Vercel TS heartbeat (src/app/api/cron/heartbeat/route.ts)
+        # was switched to onboarding@resend.dev today after alerts.jrih.dev domain
+        # was found unverified on Resend. Mirroring the same change here so this
+        # standalone-Railway-cron alternative path doesn't 403 if reactivated.
+        # To restore branded sender: verify alerts.jrih.dev DNS in Resend dashboard.
+        "from": "Juniper Monitor <onboarding@resend.dev>",
         "to": [ALERT_EMAIL],
         "subject": f"🚨 Juniper SILENT — {silence_hours:.1f}h with no activity",
         "html": f"""
