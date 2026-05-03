@@ -140,21 +140,30 @@ Mycelium OS is the cross-agent neural operating system you live inside. It is NO
 YOUR ROLE
 You orchestrate JRIH's 5 divisions on a perpetual loop, one per hour: jri (AI/SaaS), jr_capital, jr_realty, kintsugi, hoj.
 
-YOUR FELLOW AGENTS — know who to route work to
+YOUR FELLOW AGENTS (11 active + 2 graduate-when) — know who to route work to
 | Agent | Owns | Route to them when... |
 |---|---|---|
-| Rose | Brand voice, content, social posts, email sequences, creative direction, brand quality gate. Knows Alan's voice across 6 brands (Juniper Rose, HOJ, Kintsugi, ARO, AxiomOS, Alan personal). Image-gen tools available: DALL-E 3, Higgsfield, Image2, Veio, Suno AI. | Instagram/LinkedIn posts, blog drafts, brand voice approval, email campaigns, visual direction |
-| Juno | Head of Operations. Owns income streams, deal flow, P&L, cash position, burn rate, vendor mgmt, posting schedules. Tools: Supabase, n8n (n8n.jrih.io), social platform APIs, Gmail. | execution scheduling, payment ops, posting calendars, multi-platform coordination |
-| Junior | Intelligence & Research. Owns MLS monitoring, skip trace, competitor intel, lead scoring, daily pipeline snapshots. | property/market signals, lead classification, competitive intel |
+| Rose | Brand voice, content, social posts, email sequences, creative direction, brand quality gate. Knows Alan's voice across 8 brands (Juniper Rose master, Juniper Black/Night Ledger, HOJ, Kintsugi, JRR, ARO, AxiomOS, Alan personal). Tools: Higgsfield (primary photoreal/video + Souls), DALL-E 3, Nano Banana Pro, Canva (slides), Blender (3D mockups), Adobe (sign + photo edit), Suno AI (audio). Routing per AGENTS/rose/tool_routing.md. | Instagram/LinkedIn posts, blog drafts, brand voice approval, email campaigns, visual direction, Soul training |
+| Juno | Head of Operations. Owns income streams, deal flow, P&L, cash position, burn rate, vendor mgmt, posting schedules. Tools: Supabase, n8n (n8n.jrih.io), social platform APIs, Gmail. | execution scheduling, payment ops, posting calendars, multi-platform coordination, send execution |
+| Junior | Intelligence & Research + Revenue Pod quarterback. Owns MLS monitoring, skip trace, competitor intel, lead scoring, daily pipeline snapshots, qualification engine. Quarterbacks: Kintsugi (land dev, wholesaling), insurance until Marcus. | property/market signals, lead classification, competitive intel, Kintsugi sourcing, lead qualification |
 | Advisor | Chief Strategic Counsel. 5-year horizon, risk, governance, scenario modeling. NO operational role — advises only. | high-stakes strategy decisions, governance review |
-| HOJ Agent | Foundation Programs Director. Mon/Wed/Fri schedule. Donors, grants, mentors, mentees, Thryve curriculum. | HOJ-specific tasks, grant deadlines, donor outreach (1-human HITL), grant submission (2-of-2 HITL) |
-| Alfred | Investment Intelligence. Robinhood + Moomoo portfolio, ROI scoring, market data. Trade-axis actions go to HITL by default. | trade signals, watchlist scans, IPS compliance, household balance |
-| Vision | Visual & Image Processing — analyze images, process photos, scan documents. | image-based analysis, OCR |
-| OpenClaw | Autonomous Web Research, scraping, prospecting. | deep web research, market scraping (route via Junior or vercel_cron route /api/cron/openclaw) |
-| AxiomOS Agent | Execution arm. Outreach, deal tracking, investor comms, CRM ops. | AxiomOS founding-round outreach, investor follow-ups |
+| HOJ Agent | Foundation Programs Director. Mon/Wed/Fri schedule. Donors, grants, mentors, mentees, Thryve curriculum. References origin canon at Downloads/jrih-mycelium/origins/heart_of_juniper_directors_package.md. | HOJ-specific tasks, grant deadlines, donor outreach (1-human HITL), grant submission (2-of-2 HITL) |
+| Alfred | Investment Intelligence. Robinhood + Moomoo portfolio, ROI scoring, market data, capital-stack modeling for Kintsugi REI partnerships. Trade-axis actions go to HITL by default. | trade signals, watchlist scans, IPS compliance, household balance, REI capital structure |
+| Vision | **Eyes of next / Watcher at the Rim.** Forward-leaning trajectory projection + horizon scanning + inbound detection. Multimodal signal monitoring feeds the foresight layer. **Universal augmentation — pairs with any and all agents** (each partner operates in present; Vision projects future state on that surface: trajectory, horizon, inbound, decay). | foresight overlay on any agent's surface, trajectory forecasts, horizon scans, inbound-signal detection, brand-soul drift projection, image/OCR analysis when explicitly invoked |
+| OpenClaw | Autonomous Web Research, scraping, prospecting, multi-step investigation. | deep web research, market scraping (route via Junior or vercel_cron route /api/cron/openclaw) |
+| AxiomOS Agent | INTERNAL AxiomOS execution. Product demos, technical proof, founder-round materials, internal tooling. Pairs with Bishop (external-facing). | AxiomOS demos, technical proof, internal product work, founder-round comms |
+| Sage 🆕 | JRR Brokerage Agent. Listings, buyer rep, transaction coordination, sphere/farm marketing, MLS ops. Posture: advisory + coordinating; defers strategic calls to Alan. | JRR listings, buyer-rep workflow, transaction milestones, sphere cadence, showings, close coord |
+| Bishop 🆕 | AxiomOS SDR. Cold outbound to family offices ($10–250M AUM), mid-market operators, 50–500-person agencies. Voice: operator-to-operator peer voice (NOT vendor-pitching-customer). Hands warm prospects to AxiomOS Agent for demos. | AxiomOS outbound, prospect enrichment, sequence sends, demo scheduling, proposal drafts |
+
+GRADUATE-WHEN (planned, not yet active):
+- Quinn — Wholesaling SDR (spawns at 10+ wholesale assignments/month). Until then: Junior + Juno tag-team.
+- Marcus — Insurance Specialist (spawns at first $5k commission month). Until then: Junior + Rose + Juno tag-team.
+
+THE REVENUE POD (formal swarm):
+Members: Junior + Bishop + AxiomOS Agent + Sage. Cycle: Junior → (qualified lead) → Bishop → (demo request) → AxiomOS Agent → (closed deal) → Sage when RE-relevant → (sphere intel) → Junior, repeat.
 
 ORCHESTRATION CHAIN
-Alan → You → ( Juno → {{Rose (Juno→Rose→Output loop), Junior → OpenClaw, Alfred, AxiomOS Agent}}, Advisor, HOJ, Vision )
+Alan → You → ( Juno → {{Rose (Juno→Rose→Output loop), Junior → OpenClaw, Alfred, AxiomOS Agent, Bishop}}, Sage, Advisor, HOJ, Vision )
 
 DIVISION YOU'RE SCANNING NOW: {division}
 
@@ -168,19 +177,23 @@ Junior's active rules (must comply):
 
 YOUR TASK
 Decide the single most impactful action for {division} right now. CRITICALLY: identify the right AGENT to execute it.
-- Content / brand / Instagram / email copy → Rose
+- Content / brand / Instagram / email copy → Rose (apply matching brand Soul; reference brands/<brand>.md)
 - Posting / scheduling / multi-platform → Juno
 - Trade / portfolio / market data → Alfred (defaults to HITL)
-- MLS / lead intel / competitive scrape → Junior (or OpenClaw via Junior)
+- MLS / lead intel / competitive scrape / lead qualification → Junior (or OpenClaw via Junior)
 - Strategy / governance → Advisor
-- Foundation / grants / mentors → HOJ Agent
-- Image analysis → Vision
-- Investor outreach / deal tracking → AxiomOS Agent
+- Foundation / grants / mentors / donors → HOJ Agent
+- Image analysis / voice memo transcription → Vision
+- AxiomOS internal / demo / technical → AxiomOS Agent
+- AxiomOS outbound / prospecting / SDR work → Bishop (then AxiomOS Agent for demos)
+- JRR listings / buyers / transactions / sphere → Sage
+- Kintsugi land dev / REI partnerships / wholesaling → Junior (quarterback) + Alfred for capital
 - General orchestration / system task → self
 
 Return JSON: {{"action_type": "email|deploy|task|research|content|contract|memory|none",
 "description": "what to do, why, and which agent should execute it",
-"target_agent": "rose|juno|junior|alfred|advisor|hoj|vision|openclaw|axiom|self|null",
+"target_agent": "rose|juno|junior|alfred|advisor|hoj|vision|openclaw|axiom|sage|bishop|self|null",
+"target_brand": "juniper-rose-master|juniper-black|hoj|kintsugi|jrr|aro|axiomos|alan-personal|null",
 "confidence": 0.0-1.0,
 "complexity": "low|high|critical",
 "details": {{}}}}
@@ -278,8 +291,114 @@ JSON:""")
     return state
 
 
+def evaluate_junior_rules(rules, *, agent, action_type, division, decision_text, payload=None,
+                          executed_count_24h=0, audit_count_24h=0):
+    """Pure-Python rule evaluator mirroring jrih-command-center confidence_router DSL (Phase 7.4).
+
+    Supported clauses (AND-chained within a single rule's condition):
+      - "decision ~* 'PATTERN'"           regex on decision_text
+      - "agent = 'X'"                     equality on agent name (target_agent of the action)
+      - "action_type = 'X'" / "~* 'P'"   action type equality / regex
+      - "division = 'X'"                  equality
+      - "<field> = 'X'" / "~* 'P'"        arbitrary payload string field
+      - "<field> >=|<=|>|<|= N"           arbitrary payload numeric field
+
+    Returns the first matching rule (dict with 'condition','action','id','description'), or None.
+    """
+    payload = payload or {}
+    HANDLED_STRING_FIELDS = {'decision', 'agent', 'action_type', 'division'}
+    payload_with_kwargs = dict(payload)
+    payload_with_kwargs.setdefault('executed_count_24h', executed_count_24h)
+    payload_with_kwargs.setdefault('audit_count_24h', audit_count_24h)
+    EPS = 1e-9
+
+    for rule in rules:
+        cond = rule.get('condition') or ''
+        matched = True
+
+        m = re.search(r"decision\s*~\*\s*'([^']+)'", cond)
+        if m:
+            try:
+                if not re.search(m.group(1), decision_text or '', re.IGNORECASE):
+                    matched = False
+            except re.error:
+                matched = False
+
+        if matched:
+            m = re.search(r"agent\s*=\s*'([^']+)'", cond)
+            if m and (agent or '') != m.group(1):
+                matched = False
+
+        if matched:
+            m = re.search(r"action_type\s*~\*\s*'([^']+)'", cond)
+            if m:
+                try:
+                    if not re.search(m.group(1), action_type or '', re.IGNORECASE):
+                        matched = False
+                except re.error:
+                    matched = False
+
+        if matched:
+            m = re.search(r"action_type\s*=\s*'([^']+)'", cond)
+            if m and (action_type or '') != m.group(1):
+                matched = False
+
+        if matched:
+            m = re.search(r"division\s*=\s*'([^']+)'", cond)
+            if m and (division or '') != m.group(1):
+                matched = False
+
+        if matched:
+            for fmatch in re.finditer(r"(\w+)\s*~\*\s*'([^']+)'", cond):
+                field, pattern = fmatch.group(1), fmatch.group(2)
+                if field in HANDLED_STRING_FIELDS:
+                    continue
+                val = str(payload.get(field, ''))
+                try:
+                    if not re.search(pattern, val, re.IGNORECASE):
+                        matched = False; break
+                except re.error:
+                    matched = False; break
+
+        if matched:
+            for fmatch in re.finditer(r"(\w+)\s*=\s*'([^']+)'", cond):
+                field, expected = fmatch.group(1), fmatch.group(2)
+                if field in HANDLED_STRING_FIELDS:
+                    continue
+                if str(payload.get(field, '')) != expected:
+                    matched = False; break
+
+        if matched:
+            for fmatch in re.finditer(r"(\w+)\s*(>=|<=|>|<|=)\s*(\d+(?:\.\d+)?)", cond):
+                field, op, thresh_str = fmatch.group(1), fmatch.group(2), fmatch.group(3)
+                if field in HANDLED_STRING_FIELDS:
+                    continue
+                threshold = float(thresh_str)
+                val = payload_with_kwargs.get(field)
+                if val is None:
+                    matched = False; break
+                try:
+                    val_num = float(val)
+                except (TypeError, ValueError):
+                    matched = False; break
+                if op == '>=' and val_num < threshold:  matched = False; break
+                if op == '<=' and val_num > threshold:  matched = False; break
+                if op == '>'  and val_num <= threshold: matched = False; break
+                if op == '<'  and val_num >= threshold: matched = False; break
+                if op == '='  and abs(val_num - threshold) > EPS: matched = False; break
+
+        if matched:
+            return rule
+    return None
+
+
 def execute_decision(state: JuniperState) -> JuniperState:
-    """Execute approved decisions. High-stakes → HITL queue."""
+    """Execute approved decisions. High-stakes → HITL queue.
+
+    Phase 7.4 wire-up: junior_rules table is consulted at runtime BEFORE the
+    confidence-based HITL gate. A rule with action='reject' rejects the action;
+    action='flag' caps it to HITL regardless of confidence.
+    """
     decision = state['decision']
     action_type = decision.get('action_type', 'none')
     confidence = decision.get('confidence', 0.5)
@@ -296,6 +415,81 @@ def execute_decision(state: JuniperState) -> JuniperState:
         state['executed'] = False
         state['execution_result'] = 'Revision requested'
         return state
+
+    # ── Phase 7.4 — runtime junior_rules gate ────────────────────────────────
+    # Load active rules from junior_rules table; evaluate against the proposed
+    # decision (using target_agent if the LLM specified one, else 'juniper').
+    # Rule action='flag' → cap to HITL; action='reject' → block; action='allow'
+    # falls through to confidence-based logic.
+    try:
+        live_rules_resp = sb.table('junior_rules') \
+            .select('id,description,condition,action,active') \
+            .eq('active', True) \
+            .execute()
+        live_rules = live_rules_resp.data or []
+    except Exception as e:
+        # Don't silently disable the gate on transient errors — log and proceed
+        # with empty rules (defense: confidence-based gate still applies).
+        print(f"[junior_rules] fetch failed, gate skipped this cycle: {type(e).__name__}: {e}")
+        live_rules = []
+
+    target_agent = decision.get('target_agent') or 'juniper'
+    rule_payload = decision.get('details', {}) or {}
+    # Pull execution counters so rules using executed_count_24h / audit_count_24h
+    # can fire correctly. Synthesized into payload by evaluate_junior_rules.
+    try:
+        ec_resp = sb.table('agent_action_log') \
+            .select('id', count='exact') \
+            .eq('agent', 'juniper') \
+            .gte('created_at', (datetime.now(UTC) - timedelta(hours=24)).isoformat()) \
+            .execute()
+        executed_count_24h = ec_resp.count or 0
+    except Exception:
+        executed_count_24h = 0
+    try:
+        ac_resp = sb.table('juniper_audit') \
+            .select('id', count='exact') \
+            .eq('division', state.get('division')) \
+            .gte('created_at', (datetime.now(UTC) - timedelta(hours=24)).isoformat()) \
+            .execute()
+        audit_count_24h = ac_resp.count or 0
+    except Exception:
+        audit_count_24h = 0
+
+    matched_rule = evaluate_junior_rules(
+        live_rules,
+        agent=target_agent,
+        action_type=action_type,
+        division=state.get('division'),
+        decision_text=decision.get('description', ''),
+        payload=rule_payload,
+        executed_count_24h=executed_count_24h,
+        audit_count_24h=audit_count_24h,
+    )
+    if matched_rule:
+        rule_action = (matched_rule.get('action') or 'flag').lower()
+        rule_id = matched_rule.get('id', 'unknown')
+        if rule_action == 'reject':
+            state['executed'] = False
+            state['execution_result'] = f'Rejected by junior_rule: {rule_id} ({matched_rule.get("description","")})'
+            return state
+        if rule_action == 'flag':
+            try:
+                sb.table('hitl_queue').insert({
+                    'item_type': 'rule_gated',
+                    'title': decision.get('description', 'Rule-gated action')[:200],
+                    'context': json.dumps({**decision, '_matched_rule': rule_id, '_rule_description': matched_rule.get('description')}),
+                    'agent': 'juniper',
+                    'division': state.get('division'),
+                    'confidence': confidence,
+                }).execute()
+                state['executed'] = False
+                state['execution_result'] = f'Routed to HITL by junior_rule: {rule_id}'
+                return state
+            except Exception as e:
+                print(f"[junior_rules.flag] HITL insert failed for rule {rule_id}: {type(e).__name__}: {e}")
+                # Fall through — let confidence-based gate make the call
+        # 'allow' → fall through to confidence-based gate
 
     # High stakes or low confidence → HITL queue
     high_stakes = action_type in ('email', 'deploy', 'contract')
