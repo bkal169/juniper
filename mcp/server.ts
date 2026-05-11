@@ -1,13 +1,14 @@
 /**
  * JRIH Second Brain — MCP Server
- * 5 tools for Claude Desktop integration.
+ * 6 tools for Claude Desktop integration.
  *
  * Tools:
- *   capture  — Write a thought to the brain
- *   search   — Hybrid search (BM25 + vector)
- *   list_recent — List recent thoughts by namespace
+ *   capture       — Write a thought to the brain
+ *   search        — Hybrid search (BM25 + vector), raw results
+ *   retrieve      — Upgraded RAG: expand → multi-search → grade → rewrite → synthesize
+ *   list_recent   — List recent thoughts by namespace
  *   weekly_digest — Get latest weekly digest
- *   stats    — Brain health metrics
+ *   stats         — Brain health metrics
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -104,6 +105,178 @@ async function search(args: SearchArgs) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// TOOL: retrieve
+// Upgraded RAG: expand → multi-search → grade → rewrite → synthesize
+// retrieve > load: tight queries, confidence-weighted synthesis, citations
+// ═══════════════════════════════════════════════════════════
+
+interface RetrieveArgs {
+  query: string;
+  source?: string;
+  entry_type?: string;
+}
+
+interface ThoughtRow {
+  id: string;
+  content: string;
+  summary: string | null;
+  source: string;
+  entry_type: string;
+  tags: string[];
+  confidence: number;
+  created_at: string;
+  rrf_score: number;
+}
+
+async function expandQuery(query: string): Promise<string[]> {
+  const resp = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content:
+          'Generate 2 alternative search queries for this question. ' +
+          'Different angles, same intent. Return a JSON array of strings only.\n\n' +
+          `Query: ${query}\n\nJSON:`,
+      },
+    ],
+    max_tokens: 200,
+    temperature: 0.3,
+  });
+  const text = resp.choices[0]?.message?.content || '[]';
+  try {
+    const start = text.indexOf('[');
+    const end = text.lastIndexOf(']') + 1;
+    return start >= 0 ? JSON.parse(text.slice(start, end)) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function multiSearch(
+  queries: string[],
+  source: string | null,
+  entryType: string | null,
+  limit: number,
+): Promise<ThoughtRow[]> {
+  const seen = new Map<string, ThoughtRow>();
+  for (const q of queries.slice(0, 3)) {
+    const emb = await embed(q);
+    const { data } = await supabase.rpc('hybrid_search', {
+      query_text: q,
+      query_embedding: emb,
+      match_count: limit,
+      source_filter: source,
+      entry_type_filter: entryType,
+    });
+    for (const row of (data || []) as ThoughtRow[]) {
+      const existing = seen.get(row.id);
+      if (!existing || row.rrf_score > existing.rrf_score) {
+        seen.set(row.id, row);
+      }
+    }
+  }
+  return [...seen.values()].sort((a, b) => b.rrf_score - a.rrf_score).slice(0, 10);
+}
+
+function gradeResults(results: ThoughtRow[]): 'good' | 'poor' | 'empty' {
+  if (!results.length) return 'empty';
+  const topScore = results[0].rrf_score;
+  const highConf = results.filter(r => (r.confidence ?? 0) >= 0.7).length;
+  const uniqueSources = new Set(results.slice(0, 5).map(r => r.source)).size;
+  if (topScore >= 0.015 && highConf >= 2 && uniqueSources >= 2) return 'good';
+  if (topScore >= 0.010 && results.length >= 2) return 'poor';
+  return 'empty';
+}
+
+async function rewriteQuery(query: string): Promise<string> {
+  const resp = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content:
+          'This search query returned poor results from a knowledge base. ' +
+          'Rewrite it more broadly or from a different angle. ' +
+          'Return only the rewritten query, no explanation.\n\n' +
+          `Original: ${query}`,
+      },
+    ],
+    max_tokens: 100,
+    temperature: 0.4,
+  });
+  return resp.choices[0]?.message?.content?.trim() || query;
+}
+
+async function synthesizeAnswer(query: string, results: ThoughtRow[]): Promise<{ answer: string; citations: string[] }> {
+  const top = results.slice(0, 7);
+  const citations: string[] = [];
+  const contextParts: string[] = [];
+
+  for (let i = 0; i < top.length; i++) {
+    const r = top[i];
+    const text = r.summary || r.content.slice(0, 400);
+    const src = `${r.source}/${r.entry_type}`;
+    citations.push(`[${i + 1}] ${src} (conf:${(r.confidence ?? 0).toFixed(2)}, score:${r.rrf_score.toFixed(4)})`);
+    contextParts.push(`[${i + 1}] ${src} conf:${(r.confidence ?? 0).toFixed(2)}\n${text}`);
+  }
+
+  const resp = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'user',
+        content:
+          'Answer this query using only the provided knowledge base entries. ' +
+          'Cite sources inline by number [1], [2] etc. Be concise and direct.\n\n' +
+          `Query: ${query}\n\nKnowledge base:\n${contextParts.join('\n\n')}\n\nAnswer:`,
+      },
+    ],
+    max_tokens: 800,
+  });
+
+  return {
+    answer: resp.choices[0]?.message?.content || 'No answer generated.',
+    citations,
+  };
+}
+
+async function retrieve(args: RetrieveArgs) {
+  const source = args.source || null;
+  const entryType = args.entry_type || null;
+
+  // Expand → multi-search
+  const alternatives = await expandQuery(args.query);
+  const allQueries = [args.query, ...alternatives];
+  let results = await multiSearch(allQueries, source, entryType, 8);
+  let grade = gradeResults(results);
+
+  // Rewrite + retry once if poor
+  if (grade !== 'good') {
+    const rewritten = await rewriteQuery(args.query);
+    const retryQueries = [rewritten, ...alternatives];
+    const retryResults = await multiSearch(retryQueries, null, null, 8);
+    const retryGrade = gradeResults(retryResults);
+    if (retryGrade !== 'empty') {
+      results = retryResults;
+      grade = retryGrade;
+    }
+  }
+
+  if (!results.length) {
+    return {
+      answer: `No relevant entries found for: ${args.query}. Consider capturing this topic via brain.capture().`,
+      citations: [],
+      grade: 'empty',
+      result_count: 0,
+    };
+  }
+
+  const { answer, citations } = await synthesizeAnswer(args.query, results);
+  return { answer, citations, grade, result_count: results.length };
+}
+
+// ═══════════════════════════════════════════════════════════
 // TOOL: list_recent
 // ═══════════════════════════════════════════════════════════
 
@@ -193,6 +366,19 @@ const TOOLS = {
     },
     handler: search,
   },
+  retrieve: {
+    description: 'Upgraded RAG: expand query → multi-search → grade → rewrite-retry → synthesize with citations. Use this for questions that need a synthesized answer, not raw results.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Natural-language question or topic' },
+        source: { type: 'string', description: 'Optional namespace filter (jrih, axiom, intel, infra, …)' },
+        entry_type: { type: 'string', description: 'Optional type filter (decision, insight, reference, …)' },
+      },
+      required: ['query'],
+    },
+    handler: retrieve,
+  },
   list_recent: {
     description: 'List recent thoughts from the brain, optionally filtered by namespace',
     parameters: {
@@ -239,7 +425,7 @@ async function handleMessage(msg: { id?: string | number; method?: string; param
     respond(id, {
       protocolVersion: '2024-11-05',
       capabilities: { tools: {} },
-      serverInfo: { name: 'jrih-brain', version: '1.0.0' },
+      serverInfo: { name: 'jrih-brain', version: '1.1.0' },
     });
   } else if (method === 'tools/list') {
     respond(id, {
@@ -278,4 +464,4 @@ function respondError(id: string | number | undefined, message: string) {
   process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, error: { code: -32000, message } }) + '\n');
 }
 
-console.error('JRIH Brain MCP server started (5 tools)');
+console.error('JRIH Brain MCP server started (6 tools: +retrieve)');
