@@ -106,8 +106,10 @@ async function search(args: SearchArgs) {
 
 // ═══════════════════════════════════════════════════════════
 // TOOL: retrieve
-// Upgraded RAG: expand → multi-search → grade → rewrite → synthesize
-// retrieve > load: tight queries, confidence-weighted synthesis, citations
+// Dual-source RAG: brain (thoughts, hybrid) + vault (brain_embeddings, vector)
+// expand → embed-once → search_brain + search_vault → cross-source RRF →
+//   grade → synthesize | rewrite-retry | no_results
+// retrieve > load: tight queries, dual citations, confidence-weighted
 // ═══════════════════════════════════════════════════════════
 
 interface RetrieveArgs {
@@ -116,7 +118,7 @@ interface RetrieveArgs {
   entry_type?: string;
 }
 
-interface ThoughtRow {
+interface BrainRow {
   id: string;
   content: string;
   summary: string | null;
@@ -128,18 +130,37 @@ interface ThoughtRow {
   rrf_score: number;
 }
 
+interface VaultRow {
+  id: string;
+  note_path: string;
+  content: string;
+  metadata: Record<string, unknown>;
+  similarity: number;
+}
+
+interface MergedRow {
+  _source: 'brain' | 'vault';
+  _rrf_score: number;
+  id: string;
+  content: string;
+  summary?: string | null;
+  source?: string;
+  entry_type?: string;
+  confidence?: number;
+  note_path?: string;
+  similarity?: number;
+}
+
 async function expandQuery(query: string): Promise<string[]> {
   const resp = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'user',
-        content:
-          'Generate 2 alternative search queries for this question. ' +
-          'Different angles, same intent. Return a JSON array of strings only.\n\n' +
-          `Query: ${query}\n\nJSON:`,
-      },
-    ],
+    messages: [{
+      role: 'user',
+      content:
+        'Generate 2 alternative search queries for this question. ' +
+        'Different angles, same intent. Return a JSON array of strings only.\n\n' +
+        `Query: ${query}\n\nJSON:`,
+    }],
     max_tokens: 200,
     temperature: 0.3,
   });
@@ -148,91 +169,142 @@ async function expandQuery(query: string): Promise<string[]> {
     const start = text.indexOf('[');
     const end = text.lastIndexOf(']') + 1;
     return start >= 0 ? JSON.parse(text.slice(start, end)) : [];
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
-async function multiSearch(
+async function embedQueries(queries: string[]): Promise<number[][]> {
+  // Batch embed all queries in one API call
+  const resp = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: queries.map(q => q.slice(0, 8000)),
+  });
+  return resp.data.map(d => d.embedding);
+}
+
+async function searchBrain(
   queries: string[],
+  embeddings: number[][],
   source: string | null,
   entryType: string | null,
-  limit: number,
-): Promise<ThoughtRow[]> {
-  const seen = new Map<string, ThoughtRow>();
-  for (const q of queries.slice(0, 3)) {
-    const emb = await embed(q);
+): Promise<BrainRow[]> {
+  const seen = new Map<string, BrainRow>();
+  for (let i = 0; i < Math.min(queries.length, 3); i++) {
+    const emb = embeddings[i] ?? await embed(queries[i]);
     const { data } = await supabase.rpc('hybrid_search', {
-      query_text: q,
+      query_text: queries[i],
       query_embedding: emb,
-      match_count: limit,
+      match_count: 8,
       source_filter: source,
       entry_type_filter: entryType,
     });
-    for (const row of (data || []) as ThoughtRow[]) {
+    for (const row of (data || []) as BrainRow[]) {
       const existing = seen.get(row.id);
-      if (!existing || row.rrf_score > existing.rrf_score) {
-        seen.set(row.id, row);
-      }
+      if (!existing || row.rrf_score > existing.rrf_score) seen.set(row.id, row);
     }
   }
   return [...seen.values()].sort((a, b) => b.rrf_score - a.rrf_score).slice(0, 10);
 }
 
-function gradeResults(results: ThoughtRow[]): 'good' | 'poor' | 'empty' {
+async function searchVault(embeddings: number[][]): Promise<VaultRow[]> {
+  const seen = new Map<string, VaultRow>();
+  for (const emb of embeddings.slice(0, 3)) {
+    const { data } = await supabase.rpc('match_brain_documents', {
+      query_embedding: emb,
+      match_threshold: 0.65,
+      match_count: 8,
+    });
+    for (const row of (data || []) as VaultRow[]) {
+      const existing = seen.get(row.id);
+      if (!existing || row.similarity > existing.similarity) seen.set(row.id, row);
+    }
+  }
+  return [...seen.values()].sort((a, b) => b.similarity - a.similarity).slice(0, 10);
+}
+
+function crossSourceRrf(brain: BrainRow[], vault: VaultRow[], k = 60): MergedRow[] {
+  const scores = new Map<string, number>();
+  const rows = new Map<string, MergedRow>();
+
+  brain.forEach((r, rank) => {
+    const key = `brain:${r.id}`;
+    scores.set(key, (scores.get(key) ?? 0) + 1 / (k + rank + 1));
+    if (!rows.has(key)) rows.set(key, { _source: 'brain', _rrf_score: 0, ...r });
+  });
+
+  vault.forEach((r, rank) => {
+    const key = `vault:${r.id}`;
+    scores.set(key, (scores.get(key) ?? 0) + 1 / (k + rank + 1));
+    if (!rows.has(key)) rows.set(key, { _source: 'vault', _rrf_score: 0, ...r });
+  });
+
+  return [...scores.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([key, score]) => ({ ...rows.get(key)!, _rrf_score: score }));
+}
+
+function gradeResults(results: MergedRow[]): 'good' | 'poor' | 'empty' {
   if (!results.length) return 'empty';
-  const topScore = results[0].rrf_score;
-  const highConf = results.filter(r => (r.confidence ?? 0) >= 0.7).length;
-  const uniqueSources = new Set(results.slice(0, 5).map(r => r.source)).size;
-  if (topScore >= 0.015 && highConf >= 2 && uniqueSources >= 2) return 'good';
-  if (topScore >= 0.010 && results.length >= 2) return 'poor';
+  const topScore = results[0]._rrf_score;
+  const highConfBrain = results.filter(
+    r => r._source === 'brain' && (r.confidence ?? 0) >= 0.7,
+  ).length;
+  const hasBothSources = results.some(r => r._source === 'brain') &&
+    results.some(r => r._source === 'vault');
+  if (topScore >= 0.012 && (highConfBrain >= 1 || hasBothSources) && results.length >= 3) return 'good';
+  if (results.length >= 2) return 'poor';
   return 'empty';
 }
 
 async function rewriteQuery(query: string): Promise<string> {
   const resp = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'user',
-        content:
-          'This search query returned poor results from a knowledge base. ' +
-          'Rewrite it more broadly or from a different angle. ' +
-          'Return only the rewritten query, no explanation.\n\n' +
-          `Original: ${query}`,
-      },
-    ],
+    messages: [{
+      role: 'user',
+      content:
+        'This search returned poor results. Rewrite it more broadly or from a different angle. ' +
+        'Return only the rewritten query, no explanation.\n\nOriginal: ' + query,
+    }],
     max_tokens: 100,
     temperature: 0.4,
   });
   return resp.choices[0]?.message?.content?.trim() || query;
 }
 
-async function synthesizeAnswer(query: string, results: ThoughtRow[]): Promise<{ answer: string; citations: string[] }> {
-  const top = results.slice(0, 7);
+async function synthesizeAnswer(
+  query: string,
+  results: MergedRow[],
+): Promise<{ answer: string; citations: string[] }> {
+  const top = results.slice(0, 8);
   const citations: string[] = [];
   const contextParts: string[] = [];
 
   for (let i = 0; i < top.length; i++) {
     const r = top[i];
-    const text = r.summary || r.content.slice(0, 400);
-    const src = `${r.source}/${r.entry_type}`;
-    citations.push(`[${i + 1}] ${src} (conf:${(r.confidence ?? 0).toFixed(2)}, score:${r.rrf_score.toFixed(4)})`);
-    contextParts.push(`[${i + 1}] ${src} conf:${(r.confidence ?? 0).toFixed(2)}\n${text}`);
+    if (r._source === 'brain') {
+      const text = r.summary || r.content.slice(0, 400);
+      const ns = `${r.source}/${r.entry_type}`;
+      citations.push(`[${i + 1}] brain:${ns} (conf:${(r.confidence ?? 0).toFixed(2)}, score:${r._rrf_score.toFixed(4)})`);
+      contextParts.push(`[${i + 1}] brain:${ns} conf:${(r.confidence ?? 0).toFixed(2)}\n${text}`);
+    } else {
+      const text = r.content.slice(0, 400);
+      citations.push(`[${i + 1}] vault:${r.note_path} (score:${r._rrf_score.toFixed(4)})`);
+      contextParts.push(`[${i + 1}] vault:${r.note_path}\n${text}`);
+    }
   }
 
   const resp = await openai.chat.completions.create({
     model: 'gpt-4o',
-    messages: [
-      {
-        role: 'user',
-        content:
-          'Answer this query using only the provided knowledge base entries. ' +
-          'Cite sources inline by number [1], [2] etc. Be concise and direct.\n\n' +
-          `Query: ${query}\n\nKnowledge base:\n${contextParts.join('\n\n')}\n\nAnswer:`,
-      },
-    ],
-    max_tokens: 800,
+    messages: [{
+      role: 'user',
+      content:
+        'Answer this query using only the provided knowledge base entries. ' +
+        'brain: entries are curated high-confidence; prefer them. ' +
+        'vault: entries are raw notes; use for context. ' +
+        'Cite sources inline by number [1], [2] etc. Be concise.\n\n' +
+        `Query: ${query}\n\nKnowledge base:\n${contextParts.join('\n\n')}\n\nAnswer:`,
+    }],
+    max_tokens: 1000,
   });
 
   return {
@@ -245,35 +317,45 @@ async function retrieve(args: RetrieveArgs) {
   const source = args.source || null;
   const entryType = args.entry_type || null;
 
-  // Expand → multi-search
+  // Expand → embed-once → search both sources → merge → grade
   const alternatives = await expandQuery(args.query);
   const allQueries = [args.query, ...alternatives];
-  let results = await multiSearch(allQueries, source, entryType, 8);
-  let grade = gradeResults(results);
+  let embeddings = await embedQueries(allQueries.slice(0, 3));
+  let [brainResults, vaultResults] = await Promise.all([
+    searchBrain(allQueries, embeddings, source, entryType),
+    searchVault(embeddings),
+  ]);
+  let merged = crossSourceRrf(brainResults, vaultResults);
+  let grade = gradeResults(merged);
 
-  // Rewrite + retry once if poor
+  // Rewrite + retry once if poor/empty
   if (grade !== 'good') {
     const rewritten = await rewriteQuery(args.query);
     const retryQueries = [rewritten, ...alternatives];
-    const retryResults = await multiSearch(retryQueries, null, null, 8);
-    const retryGrade = gradeResults(retryResults);
-    if (retryGrade !== 'empty') {
-      results = retryResults;
-      grade = retryGrade;
-    }
+    embeddings = await embedQueries(retryQueries.slice(0, 3));
+    [brainResults, vaultResults] = await Promise.all([
+      searchBrain(retryQueries, embeddings, null, null),
+      searchVault(embeddings),
+    ]);
+    const retryMerged = crossSourceRrf(brainResults, vaultResults);
+    const retryGrade = gradeResults(retryMerged);
+    if (retryGrade !== 'empty') { merged = retryMerged; grade = retryGrade; }
   }
 
-  if (!results.length) {
+  if (!merged.length) {
     return {
-      answer: `No relevant entries found for: ${args.query}. Consider capturing this topic via brain.capture().`,
+      answer: `No relevant entries found for: ${args.query}. Consider brain.capture() or adding a vault note.`,
       citations: [],
       grade: 'empty',
-      result_count: 0,
+      brain_count: 0,
+      vault_count: 0,
     };
   }
 
-  const { answer, citations } = await synthesizeAnswer(args.query, results);
-  return { answer, citations, grade, result_count: results.length };
+  const { answer, citations } = await synthesizeAnswer(args.query, merged);
+  const brainCount = merged.filter(r => r._source === 'brain').length;
+  const vaultCount = merged.filter(r => r._source === 'vault').length;
+  return { answer, citations, grade, brain_count: brainCount, vault_count: vaultCount };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -367,7 +449,7 @@ const TOOLS = {
     handler: search,
   },
   retrieve: {
-    description: 'Upgraded RAG: expand query → multi-search → grade → rewrite-retry → synthesize with citations. Use this for questions that need a synthesized answer, not raw results.',
+    description: 'Dual-source RAG: brain (thoughts, hybrid BM25+vector) + vault (raw Obsidian notes, vector). Expand → embed-once → parallel search → cross-source RRF merge → grade → rewrite-retry → synthesize with brain/vault citations. Use for questions needing a synthesized answer.',
     parameters: {
       type: 'object',
       properties: {
@@ -425,7 +507,7 @@ async function handleMessage(msg: { id?: string | number; method?: string; param
     respond(id, {
       protocolVersion: '2024-11-05',
       capabilities: { tools: {} },
-      serverInfo: { name: 'jrih-brain', version: '1.1.0' },
+      serverInfo: { name: 'jrih-brain', version: '1.2.0' },
     });
   } else if (method === 'tools/list') {
     respond(id, {
@@ -464,4 +546,4 @@ function respondError(id: string | number | undefined, message: string) {
   process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, error: { code: -32000, message } }) + '\n');
 }
 
-console.error('JRIH Brain MCP server started (6 tools: +retrieve)');
+console.error('JRIH Brain MCP server started v1.2.0 (6 tools: retrieve=brain+vault)');
