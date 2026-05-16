@@ -14,8 +14,11 @@
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 
+// 2026-05-15: fallback URL updated from ubdhpa... (dead AxiomOS) to
+// zqrgaz... (live Mycelium OS · the active Brain DB). Completes the
+// intent of commit 73df657 (Phase 1A audit) which missed this file.
 const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://ubdhpacoqmlxudcvhyuu.supabase.co',
+  process.env.SUPABASE_URL || 'https://zqrgazuaideuumksijhe.supabase.co',
   process.env.SUPABASE_SERVICE_KEY || ''
 );
 

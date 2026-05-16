@@ -2,11 +2,12 @@
   "name": "jrih-brain-mcp",
   "version": "1.0.0",
   "type": "module",
-  "description": "JRIH Second Brain MCP Server — 5 tools for Claude Desktop",
-  "main": "server.ts",
+  "description": "JRIH Second Brain MCP Server — 6 tools for Claude Desktop (capture · search · retrieve · list_recent · weekly_digest · stats)",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "npx tsx server.ts",
-    "build": "npx tsc server.ts --outDir dist"
+    "start": "node dist/server.js",
+    "start:dev": "npx tsx server.ts",
+    "build": "npx tsc server.ts --outDir dist --target es2022 --module nodenext --moduleResolution nodenext --esModuleInterop --skipLibCheck"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
