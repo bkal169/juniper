@@ -1,45 +1,24 @@
-# Python
 __pycache__/
-*.py[cod]
-*.egg-info/
-dist/
-build/
+*.pyc
 .venv/
-venv/
-env/
-
-# Node
-node_modules/
-mcp/node_modules/
-
-# Environment
 .env
 .env.local
-.env.production
-# Catch-all for any .env variant (incl. .env1, .env.dev, .env*.txt scratch files
-# that have accumulated key values during ops). Audit'd 2026-05-02 — .env1 was
-# previously untracked-but-not-ignored and contained a full secret manifest.
-.env*
+# 2026-07-03 audit-fix-loop: .env1 carries live service keys and was
+# untracked-but-NOT-ignored — one `git add juniper/` away from a secrets leak.
+.env1
+.env1.txt
+*.env1
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Obsidian
-.obsidian/
-
-# Graphify output (regenerated)
-graphify-out/
-
-# Secrets
-credentials.json
-service-account.json
-*.pem
-*.key
+# 2026-07-03 — loose secret-bearing scratch files (repo is PUBLIC; these must never be staged)
+env.txt
+err_supabase_url.txt
+Your CRON_SECRET is.txt
+Instructions.txt
+Untitled.txt
+heartbeat_service_id.txt
