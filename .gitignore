@@ -22,3 +22,20 @@ Your CRON_SECRET is.txt
 Instructions.txt
 Untitled.txt
 heartbeat_service_id.txt
+
+# 2026-07-03 restore — rules dropped by the slimmed rewrite (union of both versions)
+node_modules/
+mcp/node_modules/
+.env*
+venv/
+env/
+*.py[cod]
+*.egg-info/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+.obsidian/
+graphify-out/
+data/wal.jsonl
