@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+"context-sync": {
+      "command": "npx",
+      "args": ["-y", "-p", "@context-sync/server", "context-sync"],
+      "type": "stdio"
+    }
+  }
+}

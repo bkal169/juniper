@@ -1,0 +1,9 @@
+{
+  "project": "Juniper",
+  "repo": "bkal169/juniper",
+  "purpose": "Alan's war room + Legacy — autonomous agent runtime.",
+  "memory": [
+    { "type": "note", "content": "Stack: Python agent (cron_main.py, agents/, mcp/), Supabase, deployed on Railway." },
+    { "type": "note", "content": "See HANDOFF.md and WAKEUP.md for operating handoff. vault-init/ seeds agent memory." }
+  ]
+}
