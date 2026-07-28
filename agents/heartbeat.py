@@ -6,8 +6,12 @@ Checks agent_action_log for Juniper's last cycle.
 Sends Resend alert to bkalan169@gmail.com if silent > 4 hours.
 
 Required env vars:
-  SUPABASE_URL          — must point to Brain DB (obtoinsjncbqdqgdeddl)
-  SUPABASE_SERVICE_KEY  — service-role key for Brain DB
+  SUPABASE_URL          — must point to the Brain DB: zqrgazuaideuumksijhe (Mycelium OS).
+                          NOT obtoinsjncbqdqgdeddl — that project is real, still live, and is
+                          now the Heart of Juniper production backend (donor / grant / mentor /
+                          participant data). Pointing this cron there writes into HOJ prod.
+                          See the Phase 13.3 note below (line ~41) for the 2026-04-28 migration.
+  SUPABASE_SERVICE_KEY  — service-role key for the Brain DB
   RESEND_API_KEY        — Resend API key (add in Railway service env vars)
   ALERT_EMAIL           — override recipient (default: bkalan169@gmail.com)
   HEARTBEAT_SILENCE_HOURS — silence threshold in hours (default: 4)
