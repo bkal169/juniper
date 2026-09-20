@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "juniper"
+version = "0.1.0"
+description = "Python orchestrator for JRIH Command Center"
+authors = ["JRIH <dev@jrih.local>"]
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+supabase = "^2.6.0"
+anthropic = "^0.40.0"
+httpx = "^0.27.0"
+pydantic = "^2.7.0"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+ruff = "^0.6.0"
+mypy = "^1.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
