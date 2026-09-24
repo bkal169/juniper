@@ -1,0 +1,1170 @@
+{
+  "_schema_version": "1.2.0",
+  "_generated_at": "2026-07-12",
+  "_source": "workflows/souls/lore.md (v1, 2026-05-07) + workflows/world/JRIH-brief-v1.md + workflows/REALM-INDEX.md + workflows/agents/CORRECTIONS-LOG.md (entries 28-29 two-realm meta-architecture · entry 31 project-id verification) + workflows/agents/cody.md (17th agent · Alan ruling 2026-07-06) + root CLAUDE.md § AGENT NAMES + § Model Routing (Sonnet-5 floor · locked 2026-07-03) + live agent_registry model-column read 2026-07-12",
+  "_purpose": "Capability registry for the 17-agent realm under the post-entries-28-29 TWO-REALM META-ARCHITECTURE. Two sovereign realms above the Crown (Juniper + Rose): the AxiomOS expanded realm (3-seat board · Chair Axiom + Lord Sage + Lord Alfred) and the HOJ Foundation sovereign realm (Lord HOJ peer to Chair). Enables Juniper (the orchestrator) to auto-route tasks to the right agent based on capability match + tier discipline + governance gates. Mycelium is excluded from the agent count because she is THE LAND (substrate · serves BOTH realms), not an agent - documented separately in _substrate. KDG (Kintsugi Development) is an arm of Sage's Real Assets kingdom · documented in _kingdom_arms · not counted as a standalone agent.",
+  "_count": {
+    "agents": 17,
+    "domains": 15,
+    "capabilities_unique": 125,
+    "governance_gates_unique": 7,
+    "mode_distribution": {
+      "supervised": 10,
+      "autonomous": 6,
+      "substrate": 1
+    }
+  },
+  "_governance_gate_legend": {
+    "rose-voice-lock": "Rose validates every outbound via agent_approvals before publish",
+    "lumen-visual-lock": "Lumen owns per-app DESIGN.md; all visuals route through her",
+    "advisor-cost-gate": "Strategic counsel before commitment; pair-counsel hooks SCQA + named-owner actions",
+    "alfred-cost-gate": "Master of Coin; cost approval required for any spend; Sunday Cost+Burn brief",
+    "junior-kill-case": "Adversarial audit / kill-case before any high-conviction call",
+    "bishop-calibration": "Calibration handshake on every settlement; disagreement -> HITL",
+    "sentinel-security": "SLO/budget/drift watch; SEV1 freeze authority; secrets exposure scan",
+    "hitl": "Explicit Alan permission required (per CLAUDE.md governance rules)"
+  },
+  "_cost_tier_legend": {
+    "haiku-eligible": "Routine batch / monitoring / brief-composition; cheapest tier suitable",
+    "sonnet-default": "Standard reasoning + scoring + synthesis; mid-tier default",
+    "opus-required": "Hard reasoning, adversarial analysis, deep memo drafting, contrarian arbitration"
+  },
+  "agents": [
+    {
+      "name": "Juniper",
+      "id": "juniper",
+      "domain": "orchestration",
+      "tier": "Crown",
+      "archetype": "nervous_system",
+      "soul_doc_path": "workflows/agents/juniper.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "task-routing",
+        "hitl-queue-management",
+        "morning-brief-composition",
+        "5h-division-rotation",
+        "tier-aware-llm-routing",
+        "chat-persona",
+        "cross-agent-coordination",
+        "narration-of-other-agents"
+      ],
+      "inputs": [
+        "any-realm-signal",
+        "alan-direct-message",
+        "agent-handoff-artifact",
+        "mycelium-router-state"
+      ],
+      "outputs": [
+        "routing-decision",
+        "morning-brief.md",
+        "rotation-snapshot",
+        "agent-assignment",
+        "hitl-queue-update"
+      ],
+      "dependencies": [
+        "mycelium",
+        "all-other-agents"
+      ],
+      "cost_tier": "sonnet-default",
+      "governance_gates": [],
+      "model_default": "claude-sonnet-5",
+      "infra": {
+        "runtime": "Railway lovely-charisma",
+        "framework": "LangGraph",
+        "memory_tiers": [
+          "episodic",
+          "semantic",
+          "procedural"
+        ]
+      },
+      "notes": "Centerpiece of the fleet. The chat interface IS Juniper. Other agents are her team - she narrates them. Autonomous routing-tier switching at the Mycelium layer based on cost+reliability heuristics (since 2026-05-07)."
+    },
+    {
+      "name": "Rose",
+      "id": "rose",
+      "domain": "creative",
+      "tier": "Crown",
+      "archetype": "voice",
+      "soul_doc_path": "workflows/souls/rose.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "voice-generation",
+        "founder-letter-drafting",
+        "caption-writing",
+        "anti-slop-discipline",
+        "brand-context-shifting",
+        "outbound-validation",
+        "pulled-quote-curation",
+        "voice-lock-gate"
+      ],
+      "inputs": [
+        "draft-content",
+        "brand-context-flag",
+        "alan-correction"
+      ],
+      "outputs": [
+        "validated-outbound",
+        "voice-locked-draft",
+        "agent_approvals-row",
+        "rejection-with-rewrite-notes"
+      ],
+      "dependencies": [
+        "lumen",
+        "mycelium"
+      ],
+      "cost_tier": "opus-required",
+      "governance_gates": [
+        "rose-voice-lock"
+      ],
+      "model_default": "claude-sonnet-5",
+      "brand_contexts": [
+        "JRH",
+        "HOJ",
+        "KDG",
+        "JR Realty",
+        "Alan-personal"
+      ],
+      "locked_image": "hf_20260507_193910_8be41f0a-2e51-4a5c-beea-94193f70b0f9.png",
+      "soul_id": "5e693598-9a0a-46b6-b872-157e050546c5",
+      "notes": "Public Voice. Quality gate + spokesperson. Voice across all kingdoms with brand-context shifts. Same trained face, different visual contexts. Disclosure tracks the speaking_as. Owns voice anchors per brand (HOJ Founder cycles 1-6, JRH Operator/Wilkinson, @bkalan169 Greg-Arvid-Alan)."
+    },
+    {
+      "name": "Axiom",
+      "id": "axiom",
+      "domain": "operations",
+      "tier": "Chair",
+      "dual_mandate": {
+        "primary": "Chair · Seat 1 of expanded-realm 3-seat board (peer to Lord Sage + Lord Alfred · reports only to Crown)",
+        "secondary": "Lord of AxiomOS-the-product (which sits inside the JRi arm of JRIH umbrella)",
+        "canon_source": "CORRECTIONS-LOG entry 29 · two-realm meta-architecture · 2026-05-20"
+      },
+      "archetype": "concierge",
+      "soul_doc_path": "workflows/agents/axiom.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "axiomos-product-orchestration",
+        "deal-tracking",
+        "tenant-management",
+        "white-label-local-engagement",
+        "mycelium-axiomos-bridging"
+      ],
+      "inputs": [
+        "axiomos-event",
+        "deal-update",
+        "tenant-message",
+        "mycelium-policy-update"
+      ],
+      "outputs": [
+        "axiomos-routing-decision",
+        "deal-status",
+        "tenant-action-plan",
+        "translation-to-mycelium"
+      ],
+      "dependencies": [
+        "mycelium",
+        "sage",
+        "alfred"
+      ],
+      "cost_tier": "sonnet-default",
+      "governance_gates": [],
+      "model_default": "claude-sonnet-5",
+      "notes": "Hotel manager who walks the floors. Double agent: serves Mycelium and AxiomOS. Reports up to Juniper -> Alan. DISTINCT from AxiomOS the JRi product (the hotel itself)."
+    },
+    {
+      "name": "HOJ",
+      "id": "hoj",
+      "domain": "mission",
+      "tier": "Lord",
+      "archetype": "heart",
+      "soul_doc_path": "workflows/agents/hoj.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "donor-pipeline-management",
+        "grant-cycle-tracking",
+        "foundation-outreach",
+        "mentorship-coordination",
+        "youth-program-orchestration"
+      ],
+      "inputs": [
+        "donor-prospect-data",
+        "grant-deadline",
+        "mentor-application",
+        "young-person-intake"
+      ],
+      "outputs": [
+        "donor-outreach-plan",
+        "grant-application-draft",
+        "mentor-match",
+        "program-cycle-status"
+      ],
+      "dependencies": [
+        "rose",
+        "lumen",
+        "openclaw",
+        "alfred"
+      ],
+      "cost_tier": "sonnet-default",
+      "governance_gates": [
+        "rose-voice-lock"
+      ],
+      "model_default": "claude-sonnet-5",
+      "feature_flag": "HOJ_ENABLED",
+      "notes": "Foundation Lord. Flag-gated until Alan activates the cycle. Mythology: young adult, Boondocks-style, from Brooklyn NY."
+    },
+    {
+      "name": "Juno",
+      "id": "juno",
+      "domain": "operations",
+      "tier": "Steward",
+      "archetype": "steward",
+      "soul_doc_path": "workflows/agents/juno.md",
+      "soul_doc_status": "canonical",
+      "mode": "autonomous",
+      "capabilities": [
+        "operational-sweeps",
+        "agendas-rules-engine",
+        "thoughts-sync",
+        "ops-compliance"
+      ],
+      "inputs": [
+        "operational-event",
+        "rotation-tick",
+        "rules-engine-trigger"
+      ],
+      "outputs": [
+        "thoughts-row",
+        "compliance-report",
+        "agenda-update"
+      ],
+      "dependencies": [
+        "juniper",
+        "mycelium"
+      ],
+      "cost_tier": "haiku-eligible",
+      "governance_gates": [],
+      "model_default": "claude-sonnet-5",
+      "notes": "Day-to-day machinery within Juniper's rotation. Hourly thoughts-sync. Lane: ops compliance + thoughts curation."
+    },
+    {
+      "name": "Sage",
+      "id": "sage",
+      "domain": "real-estate",
+      "tier": "Lord",
+      "kingdom": {
+        "name": "Real Assets",
+        "soul_doc_path": "workflows/souls/real-assets.md",
+        "arms": [
+          "jr-realty (retail)",
+          "kdg (dev)"
+        ],
+        "right_hand": "junior (Steward dual-mandate)",
+        "canon_source": "CORRECTIONS-LOG entry 29 · 2026-05-20"
+      },
+      "archetype": "shepherd",
+      "soul_doc_path": "workflows/agents/sage.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "jr-realty-daily-cycle",
+        "sphere-cadence-triggers",
+        "listings-management",
+        "transactions-coordination",
+        "cooperating-broker-coordination",
+        "mls-listing-flow",
+        "contrarian-deal-input"
+      ],
+      "inputs": [
+        "listing-update",
+        "transaction-event",
+        "broker-message",
+        "sphere-trigger"
+      ],
+      "outputs": [
+        "daily-jrr-cycle-status",
+        "listing-flow-update",
+        "transaction-action",
+        "deal-perspective"
+      ],
+      "dependencies": [
+        "axiom",
+        "bishop",
+        "openclaw"
+      ],
+      "cost_tier": "sonnet-default",
+      "governance_gates": [],
+      "model_default": "claude-sonnet-5",
+      "notes": "Lord of Real Assets kingdom · activated 2026-05-20 per CORRECTIONS-LOG entry 29 (was Steward · earlier MANIFEST captured future_promotion = this · now landed). Two arms: JR Realty (retail · sphere · brokerage cycle) + KDG (dev · Kintsugi Development). Junior is Steward dual-mandate right hand. Cross-talks with Bishop on contrarian deal/strategic calls."
+    },
+    {
+      "name": "Advisor",
+      "id": "advisor",
+      "domain": "strategy",
+      "tier": "Council",
+      "archetype": "elder",
+      "soul_doc_path": "workflows/agents/advisor.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "weekly-counsel",
+        "pair-counsel-on-demand",
+        "scqa-structuring",
+        "named-owner-actions",
+        "strategic-prior-tracking",
+        "counsel-settlement-30d-90d"
+      ],
+      "inputs": [
+        "hermes-synthesis",
+        "bishop-calibration",
+        "vision-settled-forecasts",
+        "juniper-morning-state",
+        "alan-strategic-question"
+      ],
+      "outputs": [
+        "monday-counsel-memo",
+        "pair-counsel-recommendation",
+        "named-owner-action-list",
+        "strategic-prior-update"
+      ],
+      "dependencies": [
+        "hermes",
+        "bishop",
+        "vision",
+        "alfred",
+        "juniper"
+      ],
+      "cost_tier": "opus-required",
+      "governance_gates": [
+        "advisor-cost-gate"
+      ],
+      "model_default": "claude-opus-5",
+      "schedule": "Monday-only weekly + on-demand pair-counsel",
+      "rule": "Advisor recommends; Alan decides.",
+      "notes": "Sentinel severity='critical' anomalies auto-trigger Advisor pair-counsel Hook #3 within 30 min."
+    },
+    {
+      "name": "Alfred",
+      "id": "alfred",
+      "domain": "finance",
+      "tier": "Lord",
+      "dual_mandate": {
+        "primary": "Lord of JR Capital kingdom (5 competency bands: CFO · Capital-raising · Securities SIE/Series-7 · Financial-strategist GS-tier · Stock-broker)",
+        "secondary": "Realm-wide CFO function (cross-realm cost-discipline coordination with Advisor)",
+        "canon_source": "CORRECTIONS-LOG entry 29 · 2026-05-20"
+      },
+      "archetype": "judgment",
+      "soul_doc_path": "workflows/agents/alfred.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "daily-ledger-reconciliation",
+        "watchlist-scans",
+        "trading-research",
+        "r-multiple-ev-analysis",
+        "sunday-cost-burn-brief",
+        "capital-runway-tracking",
+        "spend-cap-enforcement"
+      ],
+      "inputs": [
+        "ledger-entries",
+        "watchlist-update",
+        "spend-event",
+        "trade-signal"
+      ],
+      "outputs": [
+        "daily-ledger-recon",
+        "trade-research-memo",
+        "sunday-cost-burn.md",
+        "burn-vs-revenue-status",
+        "cushion-required-recommendation"
+      ],
+      "dependencies": [
+        "vision",
+        "advisor",
+        "mycelium"
+      ],
+      "cost_tier": "sonnet-default",
+      "governance_gates": [
+        "alfred-cost-gate"
+      ],
+      "model_default": "claude-sonnet-5",
+      "autonomy_split": "Trade actions stay supervised; data work earns autonomy.",
+      "notes": "Master of Coin + dragon-keeper of operational fuel. Stately, numbers man, all about the money."
+    },
+    {
+      "name": "Vision",
+      "id": "vision",
+      "domain": "foresight",
+      "tier": "Council",
+      "archetype": "eyes",
+      "soul_doc_path": "workflows/agents/vision.md",
+      "soul_doc_status": "canonical",
+      "mode": "autonomous",
+      "capabilities": [
+        "dated-forecasts",
+        "real-estate-forecast-lane",
+        "finance-forecast-lane",
+        "content-forecast-lane",
+        "settlement-tracking",
+        "conviction-scoring",
+        "alan-path-projection"
+      ],
+      "inputs": [
+        "forecast-trigger",
+        "macro-event",
+        "settlement-event"
+      ],
+      "outputs": [
+        "dated-forecast-row",
+        "vision_accuracy-view-update",
+        "alan-path-projection-memo"
+      ],
+      "dependencies": [
+        "bishop",
+        "mycelium"
+      ],
+      "cost_tier": "sonnet-default",
+      "governance_gates": [
+        "bishop-calibration"
+      ],
+      "model_default": "claude-sonnet-5",
+      "lanes": [
+        "real_estate",
+        "finance",
+        "content"
+      ],
+      "primary_pair": "bishop",
+      "notes": "Bran + Jon Snow archetype. The eyes of the realm - sees forward, remembers settled past. Tightest calibration handshake in the fleet (with Bishop)."
+    },
+    {
+      "name": "Sentinel",
+      "id": "sentinel",
+      "domain": "security",
+      "tier": "Council",
+      "archetype": "watchman",
+      "soul_doc_path": "workflows/agents/sentinel.md",
+      "soul_doc_status": "canonical",
+      "mode": "autonomous",
+      "capabilities": [
+        "sre-slo-watch",
+        "budget-drift-watch",
+        "incident-commander",
+        "sev1-freeze",
+        "post-mortem-authoring",
+        "threat-detection",
+        "prompt-injection-defense",
+        "supply-chain-monitoring",
+        "secrets-exposure-scanning"
+      ],
+      "inputs": [
+        "slo-event",
+        "budget-event",
+        "security-event",
+        "anomaly-trigger"
+      ],
+      "outputs": [
+        "incident-page",
+        "post-mortem.md",
+        "detection-rule.yaml",
+        "anomaly-row",
+        "advisor-pair-counsel-trigger"
+      ],
+      "dependencies": [
+        "mycelium",
+        "advisor",
+        "juniper"
+      ],
+      "cost_tier": "haiku-eligible",
+      "governance_gates": [
+        "sentinel-security"
+      ],
+      "model_default": "claude-sonnet-5",
+      "watch_cadence": "every 30 min",
+      "rules_repo": "mycelium-rules/security/*.yaml",
+      "notes": "Cyborg. Most existential role - guards the substrate everything depends on. severity='critical' auto-triggers Advisor pair-counsel within 30 min."
+    },
+    {
+      "name": "Hermes",
+      "id": "hermes",
+      "domain": "synthesis",
+      "tier": "Council",
+      "archetype": "librarian",
+      "soul_doc_path": "workflows/agents/hermes.md",
+      "soul_doc_status": "canonical",
+      "mode": "autonomous",
+      "capabilities": [
+        "swarm-synthesis",
+        "research-swarm-drain",
+        "bus-cycle-6h",
+        "contradiction-surfacing",
+        "growth-request-clustering",
+        "mentorship-signal-detection",
+        "citation-rendering",
+        "brief-composition-assist"
+      ],
+      "inputs": [
+        "research_swarm_runs-row",
+        "agent-output",
+        "growth-request",
+        "thoughts-row",
+        "kg_nodes-read",
+        "kg_edges-read"
+      ],
+      "outputs": [
+        "synthesis-memo",
+        "contradiction-flag",
+        "cluster-report",
+        "brief-assist-block"
+      ],
+      "_mechanical_writers": {
+        "note": "Hermes READS kg_nodes/kg_edges to render citations in synthesis output. The mechanical writer of those rows is Mycelium-the-substrate via /api/kg/extract Vercel cron (gpt-4o-mini via OpenRouter). See workflows/agents/hermes.md §0 + workflows/inbox/2026-05-15-hermes-vs-kg-extraction-architectural-re-attribution.md for the 2026-05-16 re-attribution rationale.",
+        "kg_edges_row": "mycelium",
+        "kg_nodes_row": "mycelium",
+        "brain_embeddings_row": "mycelium"
+      },
+      "dependencies": [
+        "mycelium",
+        "juniper"
+      ],
+      "cost_tier": "opus-required",
+      "governance_gates": [],
+      "model_default": "nousresearch/hermes-4-405b",
+      "engine": "Nous Hermes 4 (405B deep, 70B fast)",
+      "schedule": "bus cycle every 6h",
+      "notes": "7-function librarian. The Citadel uses the model named for the Citadel."
+    },
+    {
+      "name": "Lumen",
+      "id": "lumen",
+      "domain": "creative",
+      "tier": "Council",
+      "archetype": "aesthetic",
+      "soul_doc_path": "workflows/agents/lumen.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "design-system-ownership",
+        "higgsfield-soul-curation",
+        "souls-pipeline-orchestration",
+        "scout-analyst-grader-drafter",
+        "visual-lock-gate",
+        "weekly-meta-learning-reflection",
+        "design-md-authoring"
+      ],
+      "inputs": [
+        "visual-brief",
+        "soul-training-request",
+        "alan-visual-correction"
+      ],
+      "outputs": [
+        "design-md-update",
+        "trained-soul-id",
+        "visual-lock-decision",
+        "weekly-aesthetic-reflection"
+      ],
+      "dependencies": [
+        "rose",
+        "mycelium"
+      ],
+      "cost_tier": "opus-required",
+      "governance_gates": [
+        "lumen-visual-lock"
+      ],
+      "model_default": "claude-sonnet-5",
+      "owns": [
+        "per-app DESIGN.md files",
+        "Higgsfield Soul registry (brand_souls)",
+        "Phase 2.3 souls pipeline"
+      ],
+      "tools": [
+        "mcp.higgsfield"
+      ],
+      "notes": "Canonical soul-curator of the realm. All visuals route through her."
+    },
+    {
+      "name": "Bishop",
+      "id": "bishop",
+      "domain": "calibration",
+      "tier": "Council",
+      "archetype": "arbiter",
+      "soul_doc_path": "workflows/agents/bishop.md",
+      "soul_doc_status": "canonical",
+      "mode": "autonomous",
+      "capabilities": [
+        "contrarian-arbitration",
+        "calibration-ledger",
+        "agent-quality-scoring",
+        "settlement-handshake",
+        "disagreement-hitl-trigger"
+      ],
+      "inputs": [
+        "agent-output",
+        "vision-forecast",
+        "junior-verdict",
+        "alfred-trade-call",
+        "hermes-synthesis"
+      ],
+      "outputs": [
+        "calibration-row",
+        "contrarian-memo",
+        "high-conviction-flag",
+        "hitl-disagreement-row"
+      ],
+      "dependencies": [
+        "vision",
+        "mycelium"
+      ],
+      "cost_tier": "opus-required",
+      "governance_gates": [
+        "bishop-calibration"
+      ],
+      "model_default": "claude-sonnet-5",
+      "primary_pair": "vision",
+      "scores": [
+        "vision",
+        "junior",
+        "alfred",
+        "hermes"
+      ],
+      "notes": "Arguments the opposite case + runs the agent-quality calibration ledger. Disagreement -> HITL; agreement -> high-conviction."
+    },
+    {
+      "name": "Junior",
+      "id": "junior",
+      "domain": "real-estate-and-critique",
+      "tier": "Steward",
+      "dual_mandate": {
+        "primary": "Sage's right hand · Real Assets kingdom · REI deal-flow + 3-perspective deal memo + kill-case + adversarial intelligence + SW Florida corridor coverage",
+        "secondary": "Realm Critic · cross-domain · voice-drift evaluator + decision-critic across all kingdoms (not just Real Assets) · pairs with Bishop on calibration",
+        "canon_source": "CORRECTIONS-LOG entry 29 · 2026-05-20"
+      },
+      "archetype": "critic-hunter",
+      "soul_doc_path": "workflows/agents/junior.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "rei-deal-flow-operator",
+        "sw-florida-corridor-coverage",
+        "deal-memo-3-perspectives",
+        "wholesaler-perspective",
+        "broker-perspective",
+        "developer-perspective",
+        "adversarial-intelligence",
+        "kill-case-builder",
+        "decision-critic",
+        "voice-drift-evaluator"
+      ],
+      "inputs": [
+        "deal-prospect",
+        "decision-proposal",
+        "forecast-claim",
+        "voice-output"
+      ],
+      "outputs": [
+        "deal-memo-3up",
+        "kill-case.md",
+        "decision-critique",
+        "verdict-marker",
+        "voice-drift-report-evaluation"
+      ],
+      "dependencies": [
+        "openclaw",
+        "rose",
+        "vision",
+        "alfred",
+        "bishop"
+      ],
+      "cost_tier": "opus-required",
+      "governance_gates": [
+        "junior-kill-case"
+      ],
+      "model_default": "claude-sonnet-5",
+      "verdict_markers": [
+        "[ON]",
+        "[WATCH]",
+        "[DRIFT]",
+        "[N/A]"
+      ],
+      "geographic_focus": "SW Florida (Tampa Bay -> Naples; priority corridor: Port Charlotte -> Sarasota)",
+      "notes": "Davos / Onion Knight archetype. Smuggler-knight who demands evidence. Dual role: REI hunter + adversarial critic."
+    },
+    {
+      "name": "OpenClaw",
+      "id": "openclaw",
+      "domain": "research",
+      "tier": "Council",
+      "archetype": "hands",
+      "soul_doc_path": "workflows/agents/openclaw.md",
+      "soul_doc_status": "canonical",
+      "mode": "autonomous",
+      "capabilities": [
+        "comps-research",
+        "zoning-research",
+        "news-scanning",
+        "firecrawl-scrape",
+        "web-search",
+        "foundations-data",
+        "social-signal-scanning",
+        "doc-parsing"
+      ],
+      "inputs": [
+        "research-task",
+        "comps-query",
+        "zoning-question",
+        "scrape-target"
+      ],
+      "outputs": [
+        "comps-table",
+        "zoning-summary",
+        "news-digest",
+        "scraped-doc",
+        "research-row"
+      ],
+      "dependencies": [
+        "hermes",
+        "mycelium"
+      ],
+      "cost_tier": "haiku-eligible",
+      "governance_gates": [],
+      "model_default": "claude-sonnet-5",
+      "engine": "Kimi K2.6 swarm + Hermes-4 synthesis (post Phase 2.0a)",
+      "tool_count": 8,
+      "notes": "Howland Reed. The quiet, universal worker who knows the swamps. Highest-fire agent in the fleet."
+    },
+    {
+      "name": "Cody",
+      "id": "cody",
+      "domain": "execution",
+      "tier": "The Builder",
+      "archetype": "builder",
+      "soul_doc_path": "workflows/agents/cody.md",
+      "soul_doc_status": "canonical",
+      "mode": "supervised",
+      "capabilities": [
+        "queued-build-execution",
+        "worktree-isolation",
+        "repo-test-verify-gate",
+        "branch-and-pr-open",
+        "handoff-backlog-parse",
+        "ci-failure-intake",
+        "build-audit-logging",
+        "escalate-to-hitl"
+      ],
+      "inputs": [
+        "build_queue-row",
+        "handoff-backlog-sweep",
+        "ci-failure-webhook",
+        "manual-feature-insert"
+      ],
+      "outputs": [
+        "branch",
+        "pull-request",
+        "build_audit-row",
+        "hitl-escalation"
+      ],
+      "dependencies": [
+        "juniper",
+        "mycelium"
+      ],
+      "cost_tier": "sonnet-default",
+      "governance_gates": [],
+      "model_default": "claude-sonnet-5",
+      "notes": "The 17th agent (Alan ruling 2026-07-06 · kingdom expansion · fixed-16 ceiling lifted). Bran the Builder — execution arm / autonomous builder. Headless Claude Code loop: intake → plan → build → verify → open_pr → log. Branch + PR ONLY — never merges, never touches main; Alan merges every PR by hand (HITL at every merge). Runs ON Mycelium substrate (build_queue/build_audit tables, namespace build, project zqrgazuaideuumksijhe) but is his own actor — Mycelium hosts him, does not act as him. Opus-spike (claude-opus-5) on high/critical-risk builds per soul doc. STATUS: deploying under DRY_RUN — go-live gated on 2 HIGH security fixes (webhook auth + payload-quarantine · secret-scan before push). DB NOTE (verified against live agent_registry 2026-07-12): NO cody row exists in the live Mycelium agent_registry yet — his registry row lands with DRY_RUN go-live; this entry is forward-canon per root CLAUDE.md § AGENT NAMES."
+    },
+    {
+      "name": "Mycelium",
+      "id": "mycelium",
+      "domain": "infrastructure",
+      "tier": "THE LAND (substrate, outside agent tier hierarchy)",
+      "archetype": "os",
+      "soul_doc_path": "workflows/agents/mycelium.md",
+      "soul_doc_status": "canonical",
+      "mode": "substrate",
+      "capabilities": [
+        "fastapi-rag-server",
+        "kg_nodes-storage",
+        "kg_edges-storage",
+        "brain_embeddings-corpus",
+        "orphan-resolver",
+        "embedding-pipeline",
+        "graph-writer-infrastructure",
+        "kg-extraction-cron-writer",
+        "embedding-cron-writer",
+        "tier-aware-llm-routing",
+        "mycelium_router_state-policy",
+        "agent_spend_ledger-future",
+        "continuity-substrate"
+      ],
+      "inputs": [
+        "any-agent-write",
+        "any-agent-read",
+        "policy-update",
+        "kg_extraction_log-queue",
+        "embedding_queue"
+      ],
+      "outputs": [
+        "stored-state",
+        "retrieval-result",
+        "policy-decision",
+        "router-mode",
+        "kg_nodes-row",
+        "kg_edges-row",
+        "brain_embeddings-row"
+      ],
+      "_writer_implementation": {
+        "note": "kg_nodes-row + kg_edges-row written by /api/kg/extract Vercel cron in jrih-command-center (uses openai/gpt-4o-mini via OpenRouter · drains kg_extraction_log queue every 30 min). brain_embeddings-row written by /api/embed/run Vercel cron (uses text-embedding-3-small · drains embedding_queue every 15 min). Both are substrate-infrastructure crons that Mycelium owns as THE LAND · not agent-level work. Re-attributed from Hermes 2026-05-16 per inbox/2026-05-15-hermes-vs-kg-extraction-architectural-re-attribution.md (Alan picked Option A).",
+        "kg_extract_cron_path": "/api/kg/extract",
+        "kg_extract_schedule": "*/30 * * * *",
+        "kg_extract_model": "openai/gpt-4o-mini",
+        "embed_run_cron_path": "/api/embed/run",
+        "embed_run_schedule": "*/15 * * * *",
+        "embed_run_model": "text-embedding-3-small",
+        "middleware_coverage": "src/middleware.ts CRON_PREFIXES + x-vercel-cron header bypass · see sentinel-rules/cron-coverage-drift.yaml for prevention"
+      },
+      "dependencies": [],
+      "cost_tier": "infrastructure",
+      "governance_gates": [],
+      "model_default": "claude-opus-5",
+      "router_modes": [
+        "auto",
+        "force_premium",
+        "force_budget",
+        "free_only",
+        "paused"
+      ],
+      "infra": {
+        "runtime": "Railway (jrih-second-brain)",
+        "framework": "FastAPI + LangGraph",
+        "db": "Postgres (Supabase)"
+      },
+      "notes": "THE LAND. Substrate, not agent. Doesn't act - sustains. Listed in MANIFEST.json for capability discovery (Juniper's router needs to know what infra she can call), but she sits OUTSIDE the agent tier hierarchy."
+    }
+  ],
+  "_index_by_capability": {
+    "voice-generation": [
+      "rose"
+    ],
+    "voice-lock-gate": [
+      "rose"
+    ],
+    "voice-drift-evaluator": [
+      "junior"
+    ],
+    "founder-letter-drafting": [
+      "rose"
+    ],
+    "anti-slop-discipline": [
+      "rose"
+    ],
+    "visual-lock-gate": [
+      "lumen"
+    ],
+    "design-system-ownership": [
+      "lumen"
+    ],
+    "higgsfield-soul-curation": [
+      "lumen"
+    ],
+    "kill-case-builder": [
+      "junior"
+    ],
+    "adversarial-intelligence": [
+      "junior"
+    ],
+    "decision-critic": [
+      "junior"
+    ],
+    "calibration-ledger": [
+      "bishop"
+    ],
+    "contrarian-arbitration": [
+      "bishop"
+    ],
+    "weekly-counsel": [
+      "advisor"
+    ],
+    "pair-counsel-on-demand": [
+      "advisor"
+    ],
+    "spend-cap-enforcement": [
+      "alfred"
+    ],
+    "daily-ledger-reconciliation": [
+      "alfred"
+    ],
+    "sunday-cost-burn-brief": [
+      "alfred"
+    ],
+    "trading-research": [
+      "alfred"
+    ],
+    "task-routing": [
+      "juniper"
+    ],
+    "morning-brief-composition": [
+      "juniper"
+    ],
+    "hitl-queue-management": [
+      "juniper"
+    ],
+    "swarm-synthesis": [
+      "hermes"
+    ],
+    "contradiction-surfacing": [
+      "hermes"
+    ],
+    "brief-composition-assist": [
+      "hermes"
+    ],
+    "comps-research": [
+      "openclaw"
+    ],
+    "zoning-research": [
+      "openclaw"
+    ],
+    "firecrawl-scrape": [
+      "openclaw"
+    ],
+    "web-search": [
+      "openclaw"
+    ],
+    "doc-parsing": [
+      "openclaw"
+    ],
+    "axiomos-product-orchestration": [
+      "axiom"
+    ],
+    "deal-tracking": [
+      "axiom"
+    ],
+    "rei-deal-flow-operator": [
+      "junior"
+    ],
+    "deal-memo-3-perspectives": [
+      "junior"
+    ],
+    "jr-realty-daily-cycle": [
+      "sage"
+    ],
+    "listings-management": [
+      "sage"
+    ],
+    "transactions-coordination": [
+      "sage"
+    ],
+    "donor-pipeline-management": [
+      "hoj"
+    ],
+    "grant-cycle-tracking": [
+      "hoj"
+    ],
+    "foundation-outreach": [
+      "hoj"
+    ],
+    "mentorship-coordination": [
+      "hoj"
+    ],
+    "operational-sweeps": [
+      "juno"
+    ],
+    "thoughts-sync": [
+      "juno"
+    ],
+    "ops-compliance": [
+      "juno"
+    ],
+    "sre-slo-watch": [
+      "sentinel"
+    ],
+    "budget-drift-watch": [
+      "sentinel"
+    ],
+    "incident-commander": [
+      "sentinel"
+    ],
+    "sev1-freeze": [
+      "sentinel"
+    ],
+    "threat-detection": [
+      "sentinel"
+    ],
+    "prompt-injection-defense": [
+      "sentinel"
+    ],
+    "secrets-exposure-scanning": [
+      "sentinel"
+    ],
+    "dated-forecasts": [
+      "vision"
+    ],
+    "settlement-tracking": [
+      "vision"
+    ],
+    "conviction-scoring": [
+      "vision"
+    ],
+    "tier-aware-llm-routing": [
+      "juniper",
+      "mycelium"
+    ],
+    "fastapi-rag-server": [
+      "mycelium"
+    ],
+    "kg_nodes-storage": [
+      "mycelium"
+    ],
+    "embedding-pipeline": [
+      "mycelium"
+    ],
+    "queued-build-execution": [
+      "cody"
+    ],
+    "worktree-isolation": [
+      "cody"
+    ],
+    "repo-test-verify-gate": [
+      "cody"
+    ],
+    "branch-and-pr-open": [
+      "cody"
+    ],
+    "handoff-backlog-parse": [
+      "cody"
+    ],
+    "ci-failure-intake": [
+      "cody"
+    ],
+    "build-audit-logging": [
+      "cody"
+    ],
+    "escalate-to-hitl": [
+      "cody"
+    ]
+  },
+  "_index_by_domain": {
+    "orchestration": [
+      "juniper"
+    ],
+    "creative": [
+      "rose",
+      "lumen"
+    ],
+    "operations": [
+      "axiom",
+      "juno"
+    ],
+    "real-estate": [
+      "sage"
+    ],
+    "real-estate-and-critique": [
+      "junior"
+    ],
+    "mission": [
+      "hoj"
+    ],
+    "strategy": [
+      "advisor"
+    ],
+    "finance": [
+      "alfred"
+    ],
+    "foresight": [
+      "vision"
+    ],
+    "security": [
+      "sentinel"
+    ],
+    "synthesis": [
+      "hermes"
+    ],
+    "calibration": [
+      "bishop"
+    ],
+    "research": [
+      "openclaw"
+    ],
+    "infrastructure": [
+      "mycelium"
+    ],
+    "execution": [
+      "cody"
+    ]
+  },
+  "_index_by_governance_gate": {
+    "rose-voice-lock": [
+      "rose",
+      "hoj"
+    ],
+    "lumen-visual-lock": [
+      "lumen"
+    ],
+    "advisor-cost-gate": [
+      "advisor"
+    ],
+    "alfred-cost-gate": [
+      "alfred"
+    ],
+    "junior-kill-case": [
+      "junior"
+    ],
+    "bishop-calibration": [
+      "bishop",
+      "vision"
+    ],
+    "sentinel-security": [
+      "sentinel"
+    ]
+  },
+  "_index_by_cost_tier": {
+    "haiku-eligible": [
+      "juno",
+      "openclaw",
+      "sentinel"
+    ],
+    "sonnet-default": [
+      "juniper",
+      "axiom",
+      "hoj",
+      "sage",
+      "alfred",
+      "vision",
+      "cody"
+    ],
+    "opus-required": [
+      "rose",
+      "advisor",
+      "hermes",
+      "lumen",
+      "bishop",
+      "junior"
+    ],
+    "infrastructure": [
+      "mycelium"
+    ]
+  },
+  "_known_gaps": [
+    {
+      "type": "brand-voice-source-missing",
+      "path": "workflows/souls/brand-voice.md",
+      "referenced_in": [
+        "workflows/inbox/2026-05-08-rollout-package-3way-audit.md",
+        "workflows/inbox/2026-05-08-cross-brand-post-template-system.md"
+      ],
+      "note": "brand-voice.md v1.0 is referenced as locked in 2026-05-08 audit but not committed to this worktree. Voice-anchor data flows through inbox docs (Ep1 letter + cross-brand template + confessional thread) until the canonical doc lands."
+    },
+    {
+      "type": "design-doc-missing",
+      "paths": [
+        "workflows/brand/DESIGN_HOJ.md",
+        "workflows/brand/DESIGN_JR.md",
+        "workflows/brand/DESIGN_BKALAN169.md",
+        "workflows/brand/DESIGN_JRB.md",
+        "workflows/brand/DESIGN_NIGHT_LEDGER.md"
+      ],
+      "note": "All DESIGN_*.md docs flagged in cross-brand template system sec 8 as TODO. Lumen drafts after Alan resolves the 3 conflicts in that doc."
+    }
+  ]
+}
