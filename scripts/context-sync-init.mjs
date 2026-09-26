@@ -41,10 +41,30 @@ const calls = [
   ...memory.map((m) => ({ name: "remember", arguments: { type: m.type, content: m.content } })),
 ];
 
+// Detached (own process group) so the server that npx spawns can be stopped
+// together with npx: child.kill() alone kills npx and orphans the server,
+// which then outlives the script holding its inherited stderr open.
 const child = spawn("npx", ["-y", "-p", "@context-sync/server", "context-sync"], {
   stdio: ["pipe", "pipe", "inherit"],
   env: process.env,
+  detached: process.platform !== "win32",
 });
+function stopServer() {
+  try {
+    if (process.platform !== "win32") process.kill(-child.pid, "SIGTERM");
+    else child.kill();
+  } catch { /* already gone */ }
+}
+// A detached child no longer shares the terminal's process group, so a
+// Ctrl-C or a wrapper's SIGTERM aimed at this script would leave the server
+// running. Stop the group first, then exit with the conventional 128+signal.
+for (const [sig, num] of [["SIGINT", 2], ["SIGTERM", 15], ["SIGHUP", 1]]) {
+  process.on(sig, () => {
+    console.error(`[context-sync] ${sig} received, stopping server`);
+    stopServer();
+    process.exit(128 + num);
+  });
+}
 
 let buf = "";
 let sawOutput = false;
@@ -71,11 +91,15 @@ async function initialize() {
     const id = nextId++;
     child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method: "initialize",
       params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "context-sync-init", version: "1.0.0" } } }) + "\n");
+    // A JSON-RPC error reply must surface as a failure, not as a result:
+    // the response handler calls rej(new Error(...)) on an error frame, so
+    // route it into the race as a value and throw if that is what arrived.
     const got = await Promise.race([
-      new Promise((res) => pending.set(id, { res, rej: res })),
+      new Promise((res) => pending.set(id, { res, rej: (e) => res(e) })),
       sleep(3000).then(() => "__timeout__"),
     ]);
     pending.delete(id);
+    if (got instanceof Error) throw new Error(`initialize rejected: ${got.message}`);
     if (got !== "__timeout__") return got;
     console.log(`[context-sync]   …initialize retry ${attempt}`);
   }
@@ -100,15 +124,20 @@ child.stdout.on("data", (chunk) => {
   }
 });
 
-const fail = (e) => { console.error(`[context-sync] FAILED: ${e?.message ?? e}`); child.kill(); process.exit(1); };
+let finished = false;
+const fail = (e) => { console.error(`[context-sync] FAILED: ${e?.message ?? e}`); stopServer(); process.exit(1); };
+// "error" only fires when the process could not be spawned. A server that
+// starts and then dies (npx download failure, crash during migration, exit
+// before replying) surfaces through "close"; without this handler the pending
+// promise dies with the event loop and the script exits 0 having seeded nothing.
 child.on("error", fail);
+child.on("close", (code, signal) => {
+  if (!finished) fail(new Error(`server exited before completion (code ${code}${signal ? `, signal ${signal}` : ""})`));
+});
+child.stdin.on("error", fail); // EPIPE when writing to a server that has already gone
 
 (async () => {
-  await send("initialize", {
-    protocolVersion: "2025-06-18",
-    capabilities: {},
-    clientInfo: { name: "context-sync-init", version: "1.0.0" },
-  });
+  await initialize(); // retries the startup race and fails loudly instead of hanging
   notify("notifications/initialized", {});
 
   for (const c of calls) {
@@ -119,7 +148,8 @@ child.on("error", fail);
   }
 
   console.log("[context-sync] done — project registered and memory seeded.");
+  finished = true;
   child.stdin.end();
-  child.kill();
+  stopServer();
   process.exit(0);
 })().catch(fail);
