@@ -55,6 +55,16 @@ function stopServer() {
     else child.kill();
   } catch { /* already gone */ }
 }
+// A detached child no longer shares the terminal's process group, so a
+// Ctrl-C or a wrapper's SIGTERM aimed at this script would leave the server
+// running. Stop the group first, then exit with the conventional 128+signal.
+for (const [sig, num] of [["SIGINT", 2], ["SIGTERM", 15], ["SIGHUP", 1]]) {
+  process.on(sig, () => {
+    console.error(`[context-sync] ${sig} received, stopping server`);
+    stopServer();
+    process.exit(128 + num);
+  });
+}
 
 let buf = "";
 let sawOutput = false;
