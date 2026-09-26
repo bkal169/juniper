@@ -41,10 +41,20 @@ const calls = [
   ...memory.map((m) => ({ name: "remember", arguments: { type: m.type, content: m.content } })),
 ];
 
+// Detached (own process group) so the server that npx spawns can be stopped
+// together with npx: child.kill() alone kills npx and orphans the server,
+// which then outlives the script holding its inherited stderr open.
 const child = spawn("npx", ["-y", "-p", "@context-sync/server", "context-sync"], {
   stdio: ["pipe", "pipe", "inherit"],
   env: process.env,
+  detached: process.platform !== "win32",
 });
+function stopServer() {
+  try {
+    if (process.platform !== "win32") process.kill(-child.pid, "SIGTERM");
+    else child.kill();
+  } catch { /* already gone */ }
+}
 
 let buf = "";
 let sawOutput = false;
@@ -100,15 +110,20 @@ child.stdout.on("data", (chunk) => {
   }
 });
 
-const fail = (e) => { console.error(`[context-sync] FAILED: ${e?.message ?? e}`); child.kill(); process.exit(1); };
+let finished = false;
+const fail = (e) => { console.error(`[context-sync] FAILED: ${e?.message ?? e}`); stopServer(); process.exit(1); };
+// "error" only fires when the process could not be spawned. A server that
+// starts and then dies (npx download failure, crash during migration, exit
+// before replying) surfaces through "close"; without this handler the pending
+// promise dies with the event loop and the script exits 0 having seeded nothing.
 child.on("error", fail);
+child.on("close", (code, signal) => {
+  if (!finished) fail(new Error(`server exited before completion (code ${code}${signal ? `, signal ${signal}` : ""})`));
+});
+child.stdin.on("error", fail); // EPIPE when writing to a server that has already gone
 
 (async () => {
-  await send("initialize", {
-    protocolVersion: "2025-06-18",
-    capabilities: {},
-    clientInfo: { name: "context-sync-init", version: "1.0.0" },
-  });
+  await initialize(); // retries the startup race and fails loudly instead of hanging
   notify("notifications/initialized", {});
 
   for (const c of calls) {
@@ -119,7 +134,8 @@ child.on("error", fail);
   }
 
   console.log("[context-sync] done — project registered and memory seeded.");
+  finished = true;
   child.stdin.end();
-  child.kill();
+  stopServer();
   process.exit(0);
 })().catch(fail);
