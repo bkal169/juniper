@@ -81,11 +81,15 @@ async function initialize() {
     const id = nextId++;
     child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method: "initialize",
       params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "context-sync-init", version: "1.0.0" } } }) + "\n");
+    // A JSON-RPC error reply must surface as a failure, not as a result:
+    // the response handler calls rej(new Error(...)) on an error frame, so
+    // route it into the race as a value and throw if that is what arrived.
     const got = await Promise.race([
-      new Promise((res) => pending.set(id, { res, rej: res })),
+      new Promise((res) => pending.set(id, { res, rej: (e) => res(e) })),
       sleep(3000).then(() => "__timeout__"),
     ]);
     pending.delete(id);
+    if (got instanceof Error) throw new Error(`initialize rejected: ${got.message}`);
     if (got !== "__timeout__") return got;
     console.log(`[context-sync]   …initialize retry ${attempt}`);
   }
