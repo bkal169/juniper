@@ -17,6 +17,7 @@ Required env vars:
   HEARTBEAT_SILENCE_HOURS — silence threshold in hours (default: 4)
 """
 
+import argparse
 import os
 import sys
 import json
@@ -39,14 +40,13 @@ RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 ALERT_EMAIL    = os.environ.get("ALERT_EMAIL", "bkalan169@gmail.com")
 SILENCE_HOURS  = int(os.environ.get("HEARTBEAT_SILENCE_HOURS", "4"))
 
-assert SUPABASE_URL, "SUPABASE_URL is required"
-assert SUPABASE_KEY, "SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) is required"
-# Phase 13.3: dropped legacy-DB hardcoded assertion. The Brain DB migrated from
-# obtoinsjncbqdqgdeddl (legacy/paused) to zqrgazuaideuumksijhe (active) on
-# 2026-04-28 and this assertion was preventing the heartbeat from being repointed.
-# Soft-warn instead of hard-fail so misconfig is visible but not crash-loop.
-if "supabase.co" not in SUPABASE_URL:
-    print(f"[heartbeat] WARNING: SUPABASE_URL doesn't look like a Supabase host: {SUPABASE_URL}", flush=True)
+EXPECTED_SUPABASE_URL = "https://zqrgazuaideuumksijhe.supabase.co"
+
+def validate_config():
+    if SUPABASE_URL != EXPECTED_SUPABASE_URL:
+        raise ValueError("SUPABASE_URL must be the approved Mycelium OS project")
+    if not SUPABASE_KEY:
+        raise ValueError("A Supabase service key is required")
 
 
 # ─────────────────────────────────────────────
@@ -70,13 +70,17 @@ def get_last_juniper_action() -> dict | None:
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json",
     })
-    try:
-        with urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read())
-            return data[0] if data else None
-    except Exception as e:
-        print(f"[heartbeat] Supabase query error: {e}", flush=True)
-        return None
+    with urlopen(req, timeout=15) as resp:
+        data = json.loads(resp.read())
+    if not isinstance(data, list) or len(data) > 1:
+        raise ValueError("Unexpected heartbeat response")
+    if data and (
+        not isinstance(data[0], dict)
+        or data[0].get("agent_id") != "juniper"
+        or not isinstance(data[0].get("created_at"), str)
+    ):
+        raise ValueError("Unexpected heartbeat row")
+    return data[0] if data else None
 
 
 # ─────────────────────────────────────────────
@@ -145,10 +149,30 @@ def send_alert(last_ts: str | None, silence_hours: float) -> bool:
 # ─────────────────────────────────────────────
 
 def main():
+    parser = argparse.ArgumentParser(description="Check Juniper's heartbeat")
+    parser.add_argument("--check-only", action="store_true",
+                        help="Validate the database read without sending email")
+    args = parser.parse_args()
+    try:
+        validate_config()
+    except ValueError as exc:
+        print(f"[heartbeat] Configuration error: {exc}", flush=True)
+        sys.exit(2)
     now = datetime.now(timezone.utc)
     print(f"[heartbeat] Check at {now.isoformat()}", flush=True)
 
-    row = get_last_juniper_action()
+    try:
+        row = get_last_juniper_action()
+    except (OSError, ValueError) as exc:
+        print(f"[heartbeat] Database read failed ({type(exc).__name__}); no alert sent.", flush=True)
+        sys.exit(2)
+
+    if args.check_only:
+        if row is None:
+            print("[heartbeat] Mycelium OS read returned no Juniper activity; no email sent.", flush=True)
+            sys.exit(1)
+        print(f"[heartbeat] Mycelium OS read confirmed Juniper activity at {row['created_at']}; no email sent.", flush=True)
+        sys.exit(0)
 
     if row is None:
         print("[heartbeat] No Juniper activity found in agent_action_log — alerting.", flush=True)
