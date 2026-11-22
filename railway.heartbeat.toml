@@ -1,0 +1,8 @@
+# Select this file explicitly for juniper-heartbeat only.
+[build]
+dockerfilePath = "Dockerfile.heartbeat"
+
+[deploy]
+startCommand = "python /app/agents/heartbeat.py"
+cronSchedule = "*/15 * * * *"
+restartPolicyType = "NEVER"
